@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "101359673878",
+    "project_id": "rashq-mawas",
+    "storage_bucket": "rashq-mawas.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:101359673878:android:23272b6130af58b93a8b37",
+        "android_client_info": {
+          "package_name": "com.example.rashq_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBJv0F08bXaGrsNmw5NAZynIwFB_eMh1as"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
