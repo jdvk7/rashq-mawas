@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
@@ -83,6 +84,22 @@ class _LoginPageState extends State<LoginPage> {
     super.dispose();
   }
 
+  Future<void> createUserDocument(User user) async {
+    final userRef =
+        FirebaseFirestore.instance.collection('users').doc(user.uid);
+
+    final existing = await userRef.get();
+
+    if (!existing.exists) {
+      await userRef.set({
+        'email': user.email,
+        'points': 0,
+        'role': 'user',
+        'createdAt': FieldValue.serverTimestamp(),
+      });
+    }
+  }
+
   Future<void> submit() async {
     final email = emailController.text.trim();
     final password = passwordController.text.trim();
@@ -103,19 +120,40 @@ class _LoginPageState extends State<LoginPage> {
 
     try {
       if (isRegisterMode) {
-        await FirebaseAuth.instance.createUserWithEmailAndPassword(
+        final credential = await FirebaseAuth.instance
+            .createUserWithEmailAndPassword(
           email: email,
           password: password,
         );
+
+        final user = credential.user;
+
+        if (user != null) {
+          await createUserDocument(user);
+        }
 
         if (mounted) {
           showMessage('تم إنشاء الحساب بنجاح ✅');
         }
       } else {
-        await FirebaseAuth.instance.signInWithEmailAndPassword(
+        final credential =
+            await FirebaseAuth.instance.signInWithEmailAndPassword(
           email: email,
           password: password,
         );
+
+        final user = credential.user;
+
+        if (user != null) {
+          final userRef =
+              FirebaseFirestore.instance.collection('users').doc(user.uid);
+
+          final document = await userRef.get();
+
+          if (!document.exists) {
+            await createUserDocument(user);
+          }
+        }
       }
     } on FirebaseAuthException catch (e) {
       String message;
@@ -124,29 +162,41 @@ class _LoginPageState extends State<LoginPage> {
         case 'invalid-email':
           message = 'البريد الإلكتروني غير صحيح';
           break;
+
         case 'user-not-found':
         case 'wrong-password':
         case 'invalid-credential':
           message = 'البريد الإلكتروني أو كلمة المرور غير صحيحة';
           break;
+
         case 'email-already-in-use':
           message = 'هذا البريد مستخدم مسبقاً';
           break;
+
         case 'weak-password':
           message = 'كلمة المرور ضعيفة';
           break;
+
         case 'too-many-requests':
           message = 'محاولات كثيرة، حاول لاحقاً';
           break;
+
         case 'network-request-failed':
           message = 'تحقق من اتصال الإنترنت';
           break;
+
         default:
           message = e.message ?? 'حدث خطأ أثناء المصادقة';
       }
 
       if (mounted) {
         showMessage(message);
+      }
+    } on FirebaseException catch (e) {
+      if (mounted) {
+        showMessage(
+          e.message ?? 'حدث خطأ في Firebase',
+        );
       }
     } catch (e) {
       if (mounted) {
@@ -179,7 +229,9 @@ class _LoginPageState extends State<LoginPage> {
       }
     } on FirebaseAuthException catch (e) {
       if (mounted) {
-        showMessage(e.message ?? 'تعذر إرسال البريد');
+        showMessage(
+          e.message ?? 'تعذر إرسال البريد',
+        );
       }
     }
   }
@@ -210,9 +262,7 @@ class _LoginPageState extends State<LoginPage> {
                   size: 80,
                   color: Colors.deepPurpleAccent,
                 ),
-
                 const SizedBox(height: 15),
-
                 const Text(
                   'رشق مواس',
                   textAlign: TextAlign.center,
@@ -221,9 +271,7 @@ class _LoginPageState extends State<LoginPage> {
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-
                 const SizedBox(height: 8),
-
                 Text(
                   isRegisterMode
                       ? 'أنشئ حسابك وابدأ الآن'
@@ -234,9 +282,7 @@ class _LoginPageState extends State<LoginPage> {
                     fontSize: 16,
                   ),
                 ),
-
                 const SizedBox(height: 35),
-
                 TextField(
                   controller: emailController,
                   keyboardType: TextInputType.emailAddress,
@@ -249,9 +295,7 @@ class _LoginPageState extends State<LoginPage> {
                     ),
                   ),
                 ),
-
                 const SizedBox(height: 15),
-
                 TextField(
                   controller: passwordController,
                   obscureText: obscurePassword,
@@ -276,9 +320,7 @@ class _LoginPageState extends State<LoginPage> {
                     ),
                   ),
                 ),
-
                 const SizedBox(height: 20),
-
                 SizedBox(
                   height: 55,
                   child: ElevatedButton(
@@ -302,9 +344,7 @@ class _LoginPageState extends State<LoginPage> {
                           ),
                   ),
                 ),
-
                 const SizedBox(height: 10),
-
                 if (!isRegisterMode)
                   TextButton(
                     onPressed: isLoading ? null : resetPassword,
@@ -312,7 +352,6 @@ class _LoginPageState extends State<LoginPage> {
                       'نسيت كلمة المرور؟',
                     ),
                   ),
-
                 TextButton(
                   onPressed: isLoading
                       ? null
@@ -347,132 +386,206 @@ class HomePage extends StatelessWidget {
   Widget build(BuildContext context) {
     final user = FirebaseAuth.instance.currentUser;
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text(
-          'رشق مواس',
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
-        centerTitle: true,
-        actions: [
-          IconButton(
-            tooltip: 'تسجيل الخروج',
-            onPressed: logout,
-            icon: const Icon(Icons.logout),
-          ),
-        ],
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(20),
-                gradient: const LinearGradient(
-                  colors: [
-                    Color(0xFF6C2BD9),
-                    Color(0xFFB52BD9),
-                  ],
+    if (user == null) {
+      return const LoginPage();
+    }
+
+    final userRef =
+        FirebaseFirestore.instance.collection('users').doc(user.uid);
+
+    return StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+      stream: userRef.snapshots(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Scaffold(
+            body: Center(
+              child: CircularProgressIndicator(),
+            ),
+          );
+        }
+
+        if (snapshot.hasError) {
+          return Scaffold(
+            appBar: AppBar(
+              title: const Text('رشق مواس'),
+              centerTitle: true,
+            ),
+            body: const Center(
+              child: Padding(
+                padding: EdgeInsets.all(20),
+                child: Text(
+                  'تعذر تحميل بيانات الحساب',
+                  textAlign: TextAlign.center,
                 ),
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'أهلاً بك 👋',
-                    style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  if (user?.email != null)
-                    Text(
-                      user!.email!,
-                      style: const TextStyle(
-                        fontSize: 13,
-                        color: Colors.white70,
-                      ),
-                    ),
-                  const SizedBox(height: 12),
-                  const Text(
-                    'رصيد النقاط',
-                    style: TextStyle(fontSize: 15),
-                  ),
-                  const SizedBox(height: 4),
-                  const Text(
-                    '0 نقطة',
-                    style: TextStyle(
-                      fontSize: 30,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ],
-              ),
             ),
+          );
+        }
 
-            const SizedBox(height: 24),
+        final data = snapshot.data?.data() ?? {};
 
-            const Text(
-              'الخدمات',
+        final role = data['role'] as String? ?? 'user';
+
+        final pointsValue = data['points'];
+
+        int points = 0;
+
+        if (pointsValue is int) {
+          points = pointsValue;
+        } else if (pointsValue is num) {
+          points = pointsValue.toInt();
+        }
+
+        final isAdmin = role == 'admin';
+
+        return Scaffold(
+          appBar: AppBar(
+            title: const Text(
+              'رشق مواس',
               style: TextStyle(
-                fontSize: 22,
                 fontWeight: FontWeight.bold,
               ),
             ),
-
-            const SizedBox(height: 12),
-
-            _ServiceCard(
-              icon: Icons.people_alt,
-              title: 'متابعين ثابتين',
-              onTap: () {},
-            ),
-            _ServiceCard(
-              icon: Icons.favorite,
-              title: 'لايكات ثابتين',
-              onTap: () {},
-            ),
-            _ServiceCard(
-              icon: Icons.repeat,
-              title: 'إعادة نشر ثابتين',
-              onTap: () {},
-            ),
-            _ServiceCard(
-              icon: Icons.bookmark,
-              title: 'حفظ ثابتين',
-              onTap: () {},
-            ),
-            _ServiceCard(
-              icon: Icons.explore,
-              title: 'إكسبلور ثابتين',
-              onTap: () {},
-            ),
-            _ServiceCard(
-              icon: Icons.visibility,
-              title: 'مشاهدات ثابتين',
-              onTap: () {},
-            ),
-
-            const SizedBox(height: 20),
-
-            ElevatedButton.icon(
-              onPressed: () {},
-              icon: const Icon(Icons.shopping_cart),
-              label: const Padding(
-                padding: EdgeInsets.all(14),
-                child: Text(
-                  'شراء النقاط',
-                  style: TextStyle(fontSize: 18),
-                ),
+            centerTitle: true,
+            actions: [
+              IconButton(
+                tooltip: 'تسجيل الخروج',
+                onPressed: logout,
+                icon: const Icon(Icons.logout),
               ),
+            ],
+          ),
+          body: SingleChildScrollView(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(20),
+                    gradient: const LinearGradient(
+                      colors: [
+                        Color(0xFF6C2BD9),
+                        Color(0xFFB52BD9),
+                      ],
+                    ),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        isAdmin ? 'أهلاً بالمطوّر 👑' : 'أهلاً بك 👋',
+                        style: const TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      if (user.email != null)
+                        Text(
+                          user.email!,
+                          style: const TextStyle(
+                            fontSize: 13,
+                            color: Colors.white70,
+                          ),
+                        ),
+                      const SizedBox(height: 12),
+                      const Text(
+                        'رصيد النقاط',
+                        style: TextStyle(
+                          fontSize: 15,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        isAdmin ? '∞ نقاط' : '$points نقطة',
+                        style: const TextStyle(
+                          fontSize: 30,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      if (isAdmin) ...[
+                        const SizedBox(height: 8),
+                        const Text(
+                          'حساب مطوّر',
+                          style: TextStyle(
+                            color: Colors.white70,
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+
+                const SizedBox(height: 24),
+
+                const Text(
+                  'الخدمات',
+                  style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+
+                const SizedBox(height: 12),
+
+                _ServiceCard(
+                  icon: Icons.people_alt,
+                  title: 'متابعين ثابتين',
+                  onTap: () {},
+                ),
+
+                _ServiceCard(
+                  icon: Icons.favorite,
+                  title: 'لايكات ثابتين',
+                  onTap: () {},
+                ),
+
+                _ServiceCard(
+                  icon: Icons.repeat,
+                  title: 'إعادة نشر ثابتين',
+                  onTap: () {},
+                ),
+
+                _ServiceCard(
+                  icon: Icons.bookmark,
+                  title: 'حفظ ثابتين',
+                  onTap: () {},
+                ),
+
+                _ServiceCard(
+                  icon: Icons.explore,
+                  title: 'إكسبلور ثابتين',
+                  onTap: () {},
+                ),
+
+                _ServiceCard(
+                  icon: Icons.visibility,
+                  title: 'مشاهدات ثابتين',
+                  onTap: () {},
+                ),
+
+                const SizedBox(height: 20),
+
+                ElevatedButton.icon(
+                  onPressed: () {},
+                  icon: const Icon(Icons.shopping_cart),
+                  label: const Padding(
+                    padding: EdgeInsets.all(14),
+                    child: Text(
+                      'شراء النقاط',
+                      style: TextStyle(
+                        fontSize: 18,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 }
