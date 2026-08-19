@@ -46,7 +46,9 @@ class AuthGate extends StatelessWidget {
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Scaffold(
-            body: Center(child: CircularProgressIndicator()),
+            body: Center(
+              child: CircularProgressIndicator(),
+            ),
           );
         }
 
@@ -112,12 +114,14 @@ class _LoginPageState extends State<LoginPage> {
       return;
     }
 
-    setState(() => isLoading = true);
+    setState(() {
+      isLoading = true;
+    });
 
     try {
       if (isRegisterMode) {
-        final credential = await FirebaseAuth.instance
-            .createUserWithEmailAndPassword(
+        final credential =
+            await FirebaseAuth.instance.createUserWithEmailAndPassword(
           email: email,
           password: password,
         );
@@ -147,37 +151,45 @@ class _LoginPageState extends State<LoginPage> {
         case 'invalid-email':
           message = 'البريد الإلكتروني غير صحيح';
           break;
+
         case 'user-not-found':
         case 'wrong-password':
         case 'invalid-credential':
           message = 'البريد الإلكتروني أو كلمة المرور غير صحيحة';
           break;
+
         case 'email-already-in-use':
           message = 'هذا البريد مستخدم مسبقاً';
           break;
+
         case 'weak-password':
           message = 'كلمة المرور ضعيفة';
           break;
+
         case 'too-many-requests':
           message = 'محاولات كثيرة، حاول لاحقاً';
           break;
+
         case 'network-request-failed':
           message = 'تحقق من اتصال الإنترنت';
           break;
+
         default:
           message = e.message ?? 'حدث خطأ أثناء المصادقة';
       }
 
-      if (mounted) showMessage(message);
-    } on FirebaseException catch (e) {
       if (mounted) {
-        showMessage(e.message ?? 'حدث خطأ في Firebase');
+        showMessage(message);
       }
     } catch (_) {
-      if (mounted) showMessage('حدث خطأ غير متوقع');
+      if (mounted) {
+        showMessage('حدث خطأ غير متوقع');
+      }
     } finally {
       if (mounted) {
-        setState(() => isLoading = false);
+        setState(() {
+          isLoading = false;
+        });
       }
     }
   }
@@ -231,7 +243,9 @@ class _LoginPageState extends State<LoginPage> {
                   size: 80,
                   color: Colors.deepPurpleAccent,
                 ),
+
                 const SizedBox(height: 15),
+
                 const Text(
                   'رشق مواس',
                   textAlign: TextAlign.center,
@@ -240,7 +254,9 @@ class _LoginPageState extends State<LoginPage> {
                     fontWeight: FontWeight.bold,
                   ),
                 ),
+
                 const SizedBox(height: 8),
+
                 Text(
                   isRegisterMode
                       ? 'أنشئ حسابك وابدأ الآن'
@@ -251,7 +267,9 @@ class _LoginPageState extends State<LoginPage> {
                     fontSize: 16,
                   ),
                 ),
+
                 const SizedBox(height: 35),
+
                 TextField(
                   controller: emailController,
                   keyboardType: TextInputType.emailAddress,
@@ -264,7 +282,9 @@ class _LoginPageState extends State<LoginPage> {
                     ),
                   ),
                 ),
+
                 const SizedBox(height: 15),
+
                 TextField(
                   controller: passwordController,
                   obscureText: obscurePassword,
@@ -289,7 +309,9 @@ class _LoginPageState extends State<LoginPage> {
                     ),
                   ),
                 ),
+
                 const SizedBox(height: 20),
+
                 SizedBox(
                   height: 55,
                   child: ElevatedButton(
@@ -313,12 +335,17 @@ class _LoginPageState extends State<LoginPage> {
                           ),
                   ),
                 ),
+
                 const SizedBox(height: 10),
+
                 if (!isRegisterMode)
                   TextButton(
                     onPressed: isLoading ? null : resetPassword,
-                    child: const Text('نسيت كلمة المرور؟'),
+                    child: const Text(
+                      'نسيت كلمة المرور؟',
+                    ),
                   ),
+
                 TextButton(
                   onPressed: isLoading
                       ? null
@@ -383,6 +410,20 @@ class HomePage extends StatelessWidget {
     await FirebaseAuth.instance.signOut();
   }
 
+  String formatNumber(int number) {
+    final text = number.toString();
+    final buffer = StringBuffer();
+
+    for (int i = 0; i < text.length; i++) {
+      if (i > 0 && (text.length - i) % 3 == 0) {
+        buffer.write(',');
+      }
+      buffer.write(text[i]);
+    }
+
+    return buffer.toString();
+  }
+
   @override
   Widget build(BuildContext context) {
     final user = FirebaseAuth.instance.currentUser;
@@ -399,12 +440,14 @@ class HomePage extends StatelessWidget {
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Scaffold(
-            body: Center(child: CircularProgressIndicator()),
+            body: Center(
+              child: CircularProgressIndicator(),
+            ),
           );
         }
 
         final data = snapshot.data?.data() ?? {};
-        final role = data['role'] as String? ?? 'user';
+
         final pointsValue = data['points'];
 
         int points = 0;
@@ -415,17 +458,22 @@ class HomePage extends StatelessWidget {
           points = pointsValue.toInt();
         }
 
-        final isAdmin = role == 'admin';
+        final role = data['role'] as String? ?? 'user';
+
+        final bool isDeveloper = role == 'admin';
 
         return Scaffold(
           appBar: AppBar(
             title: const Text(
               'رشق مواس',
-              style: TextStyle(fontWeight: FontWeight.bold),
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+              ),
             ),
             centerTitle: true,
             actions: [
               IconButton(
+                tooltip: 'تسجيل الخروج',
                 onPressed: logout,
                 icon: const Icon(Icons.logout),
               ),
@@ -451,31 +499,65 @@ class HomePage extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        isAdmin ? 'أهلاً بالمطوّر 👑' : 'أهلاً بك 👋',
+                        isDeveloper
+                            ? 'أهلاً بالمطور 👑'
+                            : 'أهلاً بك 👋',
                         style: const TextStyle(
                           fontSize: 24,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
+
                       const SizedBox(height: 10),
+
                       if (user.email != null)
                         Text(
                           user.email!,
                           style: const TextStyle(
+                            fontSize: 13,
                             color: Colors.white70,
                           ),
                         ),
+
                       const SizedBox(height: 12),
-                      const Text('رصيد النقاط'),
+
+                      const Text(
+                        'رصيد النقاط',
+                        style: TextStyle(fontSize: 15),
+                      ),
+
                       const SizedBox(height: 4),
+
                       Text(
-                        isAdmin ? '∞ نقطة' : '$points نقطة',
+                        isDeveloper
+                            ? '∞ نقطة'
+                            : '${formatNumber(points)} نقطة',
                         style: const TextStyle(
                           fontSize: 30,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
                     ],
+                  ),
+                ),
+
+                const SizedBox(height: 15),
+
+                Card(
+                  child: ListTile(
+                    leading: const CircleAvatar(
+                      child: Icon(Icons.badge),
+                    ),
+                    title: const Text(
+                      'معرّف الحساب UID',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    subtitle: SelectableText(
+                      user.uid,
+                      textDirection: TextDirection.ltr,
+                    ),
                   ),
                 ),
 
@@ -496,26 +578,31 @@ class HomePage extends StatelessWidget {
                   title: 'متابعين ثابتين',
                   onTap: () {},
                 ),
+
                 _ServiceCard(
                   icon: Icons.favorite,
                   title: 'لايكات ثابتين',
                   onTap: () {},
                 ),
+
                 _ServiceCard(
                   icon: Icons.repeat,
                   title: 'إعادة نشر ثابتين',
                   onTap: () {},
                 ),
+
                 _ServiceCard(
                   icon: Icons.bookmark,
                   title: 'حفظ ثابتين',
                   onTap: () {},
                 ),
+
                 _ServiceCard(
                   icon: Icons.explore,
                   title: 'إكسبلور ثابتين',
                   onTap: () {},
                 ),
+
                 _ServiceCard(
                   icon: Icons.visibility,
                   title: 'مشاهدات ثابتين',
@@ -538,7 +625,9 @@ class HomePage extends StatelessWidget {
                     padding: EdgeInsets.all(14),
                     child: Text(
                       'شراء النقاط',
-                      style: TextStyle(fontSize: 18),
+                      style: TextStyle(
+                        fontSize: 18,
+                      ),
                     ),
                   ),
                 ),
@@ -562,6 +651,7 @@ class PackagesPage extends StatelessWidget {
       if (i > 0 && (text.length - i) % 3 == 0) {
         buffer.write(',');
       }
+
       buffer.write(text[i]);
     }
 
@@ -576,8 +666,11 @@ class PackagesPage extends StatelessWidget {
 
     if (user == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('يجب تسجيل الدخول أولاً')),
+        const SnackBar(
+          content: Text('يجب تسجيل الدخول أولاً'),
+        ),
       );
+
       return;
     }
 
@@ -602,13 +695,17 @@ class PackagesPage extends StatelessWidget {
             content: Text(
               'الباقة: ${formatNumber(package.points)} نقطة\n'
               'السعر: ${formatNumber(package.price)} د.ع\n\n'
-              'رقم الدفع:\n07760656110\n\n'
-              'بعد إتمام الدفع، يبقى الطلب قيد المراجعة إلى أن يتم التحقق منه يدويًا.',
+              'رقم الدفع:\n'
+              '07760656110\n\n'
+              'تم إرسال طلبك للمراجعة. '
+              'لن تتم إضافة النقاط إلا بعد التحقق وقبول الطلب.',
               textDirection: TextDirection.rtl,
             ),
             actions: [
               TextButton(
-                onPressed: () => Navigator.pop(context),
+                onPressed: () {
+                  Navigator.pop(context);
+                },
                 child: const Text('حسنًا'),
               ),
             ],
@@ -619,7 +716,9 @@ class PackagesPage extends StatelessWidget {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(e.message ?? 'تعذر إنشاء الطلب'),
+            content: Text(
+              e.message ?? 'تعذر إرسال الطلب',
+            ),
           ),
         );
       }
@@ -644,7 +743,9 @@ class PackagesPage extends StatelessWidget {
             child: ListTile(
               leading: CircleAvatar(
                 child: Text(
-                  package.badge.isEmpty ? '⭐' : package.badge,
+                  package.badge.isEmpty
+                      ? '⭐'
+                      : package.badge,
                 ),
               ),
               title: Text(
@@ -669,18 +770,22 @@ class PackagesPage extends StatelessWidget {
                     ),
                     content: Text(
                       'السعر: ${formatNumber(package.price)} د.ع\n\n'
-                      'رقم الدفع:\n07760656110\n\n'
+                      'رقم الدفع:\n'
+                      '07760656110\n\n'
                       'بعد إتمام الدفع اضغط "إرسال طلب".',
                       textDirection: TextDirection.rtl,
                     ),
                     actions: [
                       TextButton(
-                        onPressed: () => Navigator.pop(context),
+                        onPressed: () {
+                          Navigator.pop(context);
+                        },
                         child: const Text('إلغاء'),
                       ),
                       ElevatedButton(
                         onPressed: () {
                           Navigator.pop(context);
+
                           createPurchaseRequest(
                             context,
                             package,
