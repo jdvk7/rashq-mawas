@@ -1,6 +1,16 @@
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 
-void main() {
+import 'firebase_options.dart';
+
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+
   runApp(const RashqMawasApp());
 }
 
@@ -20,7 +30,308 @@ class RashqMawasApp extends StatelessWidget {
         ),
         scaffoldBackgroundColor: const Color(0xFF0D0B14),
       ),
-      home: const HomePage(),
+      home: const AuthGate(),
+    );
+  }
+}
+
+class AuthGate extends StatelessWidget {
+  const AuthGate({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return StreamBuilder<User?>(
+      stream: FirebaseAuth.instance.authStateChanges(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Scaffold(
+            body: Center(
+              child: CircularProgressIndicator(),
+            ),
+          );
+        }
+
+        if (snapshot.hasData) {
+          return const HomePage();
+        }
+
+        return const LoginPage();
+      },
+    );
+  }
+}
+
+class LoginPage extends StatefulWidget {
+  const LoginPage({super.key});
+
+  @override
+  State<LoginPage> createState() => _LoginPageState();
+}
+
+class _LoginPageState extends State<LoginPage> {
+  final emailController = TextEditingController();
+  final passwordController = TextEditingController();
+
+  bool isLoading = false;
+  bool isRegisterMode = false;
+  bool obscurePassword = true;
+
+  @override
+  void dispose() {
+    emailController.dispose();
+    passwordController.dispose();
+    super.dispose();
+  }
+
+  Future<void> submit() async {
+    final email = emailController.text.trim();
+    final password = passwordController.text.trim();
+
+    if (email.isEmpty || password.isEmpty) {
+      showMessage('اكتب البريد الإلكتروني وكلمة المرور');
+      return;
+    }
+
+    if (password.length < 6) {
+      showMessage('كلمة المرور يجب أن تكون 6 أحرف أو أكثر');
+      return;
+    }
+
+    setState(() {
+      isLoading = true;
+    });
+
+    try {
+      if (isRegisterMode) {
+        await FirebaseAuth.instance.createUserWithEmailAndPassword(
+          email: email,
+          password: password,
+        );
+
+        if (mounted) {
+          showMessage('تم إنشاء الحساب بنجاح ✅');
+        }
+      } else {
+        await FirebaseAuth.instance.signInWithEmailAndPassword(
+          email: email,
+          password: password,
+        );
+      }
+    } on FirebaseAuthException catch (e) {
+      String message;
+
+      switch (e.code) {
+        case 'invalid-email':
+          message = 'البريد الإلكتروني غير صحيح';
+          break;
+        case 'user-not-found':
+        case 'wrong-password':
+        case 'invalid-credential':
+          message = 'البريد الإلكتروني أو كلمة المرور غير صحيحة';
+          break;
+        case 'email-already-in-use':
+          message = 'هذا البريد مستخدم مسبقاً';
+          break;
+        case 'weak-password':
+          message = 'كلمة المرور ضعيفة';
+          break;
+        case 'too-many-requests':
+          message = 'محاولات كثيرة، حاول لاحقاً';
+          break;
+        case 'network-request-failed':
+          message = 'تحقق من اتصال الإنترنت';
+          break;
+        default:
+          message = e.message ?? 'حدث خطأ أثناء المصادقة';
+      }
+
+      if (mounted) {
+        showMessage(message);
+      }
+    } catch (e) {
+      if (mounted) {
+        showMessage('حدث خطأ غير متوقع');
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          isLoading = false;
+        });
+      }
+    }
+  }
+
+  Future<void> resetPassword() async {
+    final email = emailController.text.trim();
+
+    if (email.isEmpty) {
+      showMessage('اكتب بريدك الإلكتروني أولاً');
+      return;
+    }
+
+    try {
+      await FirebaseAuth.instance.sendPasswordResetEmail(
+        email: email,
+      );
+
+      if (mounted) {
+        showMessage('تم إرسال رابط إعادة تعيين كلمة المرور 📩');
+      }
+    } on FirebaseAuthException catch (e) {
+      if (mounted) {
+        showMessage(e.message ?? 'تعذر إرسال البريد');
+      }
+    }
+  }
+
+  void showMessage(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          message,
+          textDirection: TextDirection.rtl,
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: SafeArea(
+        child: Center(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const Icon(
+                  Icons.flash_on,
+                  size: 80,
+                  color: Colors.deepPurpleAccent,
+                ),
+
+                const SizedBox(height: 15),
+
+                const Text(
+                  'رشق مواس',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 32,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+
+                const SizedBox(height: 8),
+
+                Text(
+                  isRegisterMode
+                      ? 'أنشئ حسابك وابدأ الآن'
+                      : 'سجل دخولك للمتابعة',
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    color: Colors.white70,
+                    fontSize: 16,
+                  ),
+                ),
+
+                const SizedBox(height: 35),
+
+                TextField(
+                  controller: emailController,
+                  keyboardType: TextInputType.emailAddress,
+                  textDirection: TextDirection.ltr,
+                  decoration: InputDecoration(
+                    labelText: 'البريد الإلكتروني',
+                    prefixIcon: const Icon(Icons.email),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                  ),
+                ),
+
+                const SizedBox(height: 15),
+
+                TextField(
+                  controller: passwordController,
+                  obscureText: obscurePassword,
+                  textDirection: TextDirection.ltr,
+                  decoration: InputDecoration(
+                    labelText: 'كلمة المرور',
+                    prefixIcon: const Icon(Icons.lock),
+                    suffixIcon: IconButton(
+                      onPressed: () {
+                        setState(() {
+                          obscurePassword = !obscurePassword;
+                        });
+                      },
+                      icon: Icon(
+                        obscurePassword
+                            ? Icons.visibility
+                            : Icons.visibility_off,
+                      ),
+                    ),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                  ),
+                ),
+
+                const SizedBox(height: 20),
+
+                SizedBox(
+                  height: 55,
+                  child: ElevatedButton(
+                    onPressed: isLoading ? null : submit,
+                    child: isLoading
+                        ? const SizedBox(
+                            width: 25,
+                            height: 25,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                            ),
+                          )
+                        : Text(
+                            isRegisterMode
+                                ? 'إنشاء حساب'
+                                : 'تسجيل الدخول',
+                            style: const TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                  ),
+                ),
+
+                const SizedBox(height: 10),
+
+                if (!isRegisterMode)
+                  TextButton(
+                    onPressed: isLoading ? null : resetPassword,
+                    child: const Text(
+                      'نسيت كلمة المرور؟',
+                    ),
+                  ),
+
+                TextButton(
+                  onPressed: isLoading
+                      ? null
+                      : () {
+                          setState(() {
+                            isRegisterMode = !isRegisterMode;
+                          });
+                        },
+                  child: Text(
+                    isRegisterMode
+                        ? 'لديك حساب؟ تسجيل الدخول'
+                        : 'ليس لديك حساب؟ إنشاء حساب',
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 }
@@ -28,8 +339,14 @@ class RashqMawasApp extends StatelessWidget {
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
 
+  Future<void> logout() async {
+    await FirebaseAuth.instance.signOut();
+  }
+
   @override
   Widget build(BuildContext context) {
+    final user = FirebaseAuth.instance.currentUser;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text(
@@ -37,6 +354,13 @@ class HomePage extends StatelessWidget {
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
         centerTitle: true,
+        actions: [
+          IconButton(
+            tooltip: 'تسجيل الخروج',
+            onPressed: logout,
+            icon: const Icon(Icons.logout),
+          ),
+        ],
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
@@ -54,23 +378,32 @@ class HomePage extends StatelessWidget {
                   ],
                 ),
               ),
-              child: const Column(
+              child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
+                  const Text(
                     'أهلاً بك 👋',
                     style: TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                  SizedBox(height: 10),
-                  Text(
+                  const SizedBox(height: 10),
+                  if (user?.email != null)
+                    Text(
+                      user!.email!,
+                      style: const TextStyle(
+                        fontSize: 13,
+                        color: Colors.white70,
+                      ),
+                    ),
+                  const SizedBox(height: 12),
+                  const Text(
                     'رصيد النقاط',
                     style: TextStyle(fontSize: 15),
                   ),
-                  SizedBox(height: 4),
-                  Text(
+                  const SizedBox(height: 4),
+                  const Text(
                     '0 نقطة',
                     style: TextStyle(
                       fontSize: 30,
@@ -169,7 +502,10 @@ class _ServiceCard extends StatelessWidget {
             fontWeight: FontWeight.bold,
           ),
         ),
-        trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+        trailing: const Icon(
+          Icons.arrow_forward_ios,
+          size: 16,
+        ),
         onTap: onTap,
       ),
     );
