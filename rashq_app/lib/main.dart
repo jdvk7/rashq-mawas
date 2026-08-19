@@ -46,9 +46,7 @@ class AuthGate extends StatelessWidget {
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Scaffold(
-            body: Center(
-              child: CircularProgressIndicator(),
-            ),
+            body: Center(child: CircularProgressIndicator()),
           );
         }
 
@@ -85,13 +83,13 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   Future<void> createUserDocument(User user) async {
-    final userRef =
+    final ref =
         FirebaseFirestore.instance.collection('users').doc(user.uid);
 
-    final existing = await userRef.get();
+    final snapshot = await ref.get();
 
-    if (!existing.exists) {
-      await userRef.set({
+    if (!snapshot.exists) {
+      await ref.set({
         'email': user.email,
         'points': 0,
         'role': 'user',
@@ -114,9 +112,7 @@ class _LoginPageState extends State<LoginPage> {
       return;
     }
 
-    setState(() {
-      isLoading = true;
-    });
+    setState(() => isLoading = true);
 
     try {
       if (isRegisterMode) {
@@ -126,10 +122,8 @@ class _LoginPageState extends State<LoginPage> {
           password: password,
         );
 
-        final user = credential.user;
-
-        if (user != null) {
-          await createUserDocument(user);
+        if (credential.user != null) {
+          await createUserDocument(credential.user!);
         }
 
         if (mounted) {
@@ -142,17 +136,8 @@ class _LoginPageState extends State<LoginPage> {
           password: password,
         );
 
-        final user = credential.user;
-
-        if (user != null) {
-          final userRef =
-              FirebaseFirestore.instance.collection('users').doc(user.uid);
-
-          final document = await userRef.get();
-
-          if (!document.exists) {
-            await createUserDocument(user);
-          }
+        if (credential.user != null) {
+          await createUserDocument(credential.user!);
         }
       }
     } on FirebaseAuthException catch (e) {
@@ -162,51 +147,37 @@ class _LoginPageState extends State<LoginPage> {
         case 'invalid-email':
           message = 'البريد الإلكتروني غير صحيح';
           break;
-
         case 'user-not-found':
         case 'wrong-password':
         case 'invalid-credential':
           message = 'البريد الإلكتروني أو كلمة المرور غير صحيحة';
           break;
-
         case 'email-already-in-use':
           message = 'هذا البريد مستخدم مسبقاً';
           break;
-
         case 'weak-password':
           message = 'كلمة المرور ضعيفة';
           break;
-
         case 'too-many-requests':
           message = 'محاولات كثيرة، حاول لاحقاً';
           break;
-
         case 'network-request-failed':
           message = 'تحقق من اتصال الإنترنت';
           break;
-
         default:
           message = e.message ?? 'حدث خطأ أثناء المصادقة';
       }
 
-      if (mounted) {
-        showMessage(message);
-      }
+      if (mounted) showMessage(message);
     } on FirebaseException catch (e) {
       if (mounted) {
-        showMessage(
-          e.message ?? 'حدث خطأ في Firebase',
-        );
+        showMessage(e.message ?? 'حدث خطأ في Firebase');
       }
-    } catch (e) {
-      if (mounted) {
-        showMessage('حدث خطأ غير متوقع');
-      }
+    } catch (_) {
+      if (mounted) showMessage('حدث خطأ غير متوقع');
     } finally {
       if (mounted) {
-        setState(() {
-          isLoading = false;
-        });
+        setState(() => isLoading = false);
       }
     }
   }
@@ -229,9 +200,7 @@ class _LoginPageState extends State<LoginPage> {
       }
     } on FirebaseAuthException catch (e) {
       if (mounted) {
-        showMessage(
-          e.message ?? 'تعذر إرسال البريد',
-        );
+        showMessage(e.message ?? 'تعذر إرسال البريد');
       }
     }
   }
@@ -348,9 +317,7 @@ class _LoginPageState extends State<LoginPage> {
                 if (!isRegisterMode)
                   TextButton(
                     onPressed: isLoading ? null : resetPassword,
-                    child: const Text(
-                      'نسيت كلمة المرور؟',
-                    ),
+                    child: const Text('نسيت كلمة المرور؟'),
                   ),
                 TextButton(
                   onPressed: isLoading
@@ -375,6 +342,40 @@ class _LoginPageState extends State<LoginPage> {
   }
 }
 
+class PointPackage {
+  final int points;
+  final int price;
+  final String badge;
+
+  const PointPackage({
+    required this.points,
+    required this.price,
+    this.badge = '',
+  });
+}
+
+const packages = <PointPackage>[
+  PointPackage(points: 500, price: 750),
+  PointPackage(points: 1000, price: 1250, badge: '⭐'),
+  PointPackage(points: 2000, price: 2000),
+  PointPackage(points: 3000, price: 2750),
+  PointPackage(points: 5000, price: 4000, badge: '🔥'),
+  PointPackage(points: 7500, price: 5500),
+  PointPackage(points: 10000, price: 7000, badge: '⭐'),
+  PointPackage(points: 15000, price: 9500),
+  PointPackage(points: 20000, price: 12000),
+  PointPackage(points: 25000, price: 14000),
+  PointPackage(points: 35000, price: 18000),
+  PointPackage(points: 50000, price: 25000, badge: '🔥'),
+  PointPackage(points: 75000, price: 34000),
+  PointPackage(points: 100000, price: 43000),
+  PointPackage(points: 150000, price: 62000),
+  PointPackage(points: 200000, price: 80000),
+  PointPackage(points: 300000, price: 115000),
+  PointPackage(points: 400000, price: 145000),
+  PointPackage(points: 500000, price: 175000, badge: '🔥'),
+];
+
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
 
@@ -398,34 +399,12 @@ class HomePage extends StatelessWidget {
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Scaffold(
-            body: Center(
-              child: CircularProgressIndicator(),
-            ),
-          );
-        }
-
-        if (snapshot.hasError) {
-          return Scaffold(
-            appBar: AppBar(
-              title: const Text('رشق مواس'),
-              centerTitle: true,
-            ),
-            body: const Center(
-              child: Padding(
-                padding: EdgeInsets.all(20),
-                child: Text(
-                  'تعذر تحميل بيانات الحساب',
-                  textAlign: TextAlign.center,
-                ),
-              ),
-            ),
+            body: Center(child: CircularProgressIndicator()),
           );
         }
 
         final data = snapshot.data?.data() ?? {};
-
         final role = data['role'] as String? ?? 'user';
-
         final pointsValue = data['points'];
 
         int points = 0;
@@ -442,14 +421,11 @@ class HomePage extends StatelessWidget {
           appBar: AppBar(
             title: const Text(
               'رشق مواس',
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-              ),
+              style: TextStyle(fontWeight: FontWeight.bold),
             ),
             centerTitle: true,
             actions: [
               IconButton(
-                tooltip: 'تسجيل الخروج',
                 onPressed: logout,
                 icon: const Icon(Icons.logout),
               ),
@@ -486,34 +462,19 @@ class HomePage extends StatelessWidget {
                         Text(
                           user.email!,
                           style: const TextStyle(
-                            fontSize: 13,
                             color: Colors.white70,
                           ),
                         ),
                       const SizedBox(height: 12),
-                      const Text(
-                        'رصيد النقاط',
-                        style: TextStyle(
-                          fontSize: 15,
-                        ),
-                      ),
+                      const Text('رصيد النقاط'),
                       const SizedBox(height: 4),
                       Text(
-                        isAdmin ? '∞ نقاط' : '$points نقطة',
+                        isAdmin ? '∞ نقطة' : '$points نقطة',
                         style: const TextStyle(
                           fontSize: 30,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                      if (isAdmin) ...[
-                        const SizedBox(height: 8),
-                        const Text(
-                          'حساب مطوّر',
-                          style: TextStyle(
-                            color: Colors.white70,
-                          ),
-                        ),
-                      ],
                     ],
                   ),
                 ),
@@ -535,31 +496,26 @@ class HomePage extends StatelessWidget {
                   title: 'متابعين ثابتين',
                   onTap: () {},
                 ),
-
                 _ServiceCard(
                   icon: Icons.favorite,
                   title: 'لايكات ثابتين',
                   onTap: () {},
                 ),
-
                 _ServiceCard(
                   icon: Icons.repeat,
                   title: 'إعادة نشر ثابتين',
                   onTap: () {},
                 ),
-
                 _ServiceCard(
                   icon: Icons.bookmark,
                   title: 'حفظ ثابتين',
                   onTap: () {},
                 ),
-
                 _ServiceCard(
                   icon: Icons.explore,
                   title: 'إكسبلور ثابتين',
                   onTap: () {},
                 ),
-
                 _ServiceCard(
                   icon: Icons.visibility,
                   title: 'مشاهدات ثابتين',
@@ -569,15 +525,20 @@ class HomePage extends StatelessWidget {
                 const SizedBox(height: 20),
 
                 ElevatedButton.icon(
-                  onPressed: () {},
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const PackagesPage(),
+                      ),
+                    );
+                  },
                   icon: const Icon(Icons.shopping_cart),
                   label: const Padding(
                     padding: EdgeInsets.all(14),
                     child: Text(
                       'شراء النقاط',
-                      style: TextStyle(
-                        fontSize: 18,
-                      ),
+                      style: TextStyle(fontSize: 18),
                     ),
                   ),
                 ),
@@ -586,6 +547,155 @@ class HomePage extends StatelessWidget {
           ),
         );
       },
+    );
+  }
+}
+
+class PackagesPage extends StatelessWidget {
+  const PackagesPage({super.key});
+
+  String formatNumber(int number) {
+    final text = number.toString();
+    final buffer = StringBuffer();
+
+    for (int i = 0; i < text.length; i++) {
+      if (i > 0 && (text.length - i) % 3 == 0) {
+        buffer.write(',');
+      }
+      buffer.write(text[i]);
+    }
+
+    return buffer.toString();
+  }
+
+  Future<void> createPurchaseRequest(
+    BuildContext context,
+    PointPackage package,
+  ) async {
+    final user = FirebaseAuth.instance.currentUser;
+
+    if (user == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('يجب تسجيل الدخول أولاً')),
+      );
+      return;
+    }
+
+    try {
+      await FirebaseFirestore.instance
+          .collection('purchase_requests')
+          .add({
+        'userId': user.uid,
+        'email': user.email,
+        'points': package.points,
+        'price': package.price,
+        'paymentNumber': '07760656110',
+        'status': 'pending',
+        'createdAt': FieldValue.serverTimestamp(),
+      });
+
+      if (context.mounted) {
+        showDialog(
+          context: context,
+          builder: (_) => AlertDialog(
+            title: const Text('تم إرسال الطلب ✅'),
+            content: Text(
+              'الباقة: ${formatNumber(package.points)} نقطة\n'
+              'السعر: ${formatNumber(package.price)} د.ع\n\n'
+              'رقم الدفع:\n07760656110\n\n'
+              'بعد إتمام الدفع، يبقى الطلب قيد المراجعة إلى أن يتم التحقق منه يدويًا.',
+              textDirection: TextDirection.rtl,
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('حسنًا'),
+              ),
+            ],
+          ),
+        );
+      }
+    } on FirebaseException catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(e.message ?? 'تعذر إنشاء الطلب'),
+          ),
+        );
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('باقات النقاط'),
+        centerTitle: true,
+      ),
+      body: ListView.builder(
+        padding: const EdgeInsets.all(16),
+        itemCount: packages.length,
+        itemBuilder: (context, index) {
+          final package = packages[index];
+
+          return Card(
+            margin: const EdgeInsets.only(bottom: 10),
+            child: ListTile(
+              leading: CircleAvatar(
+                child: Text(
+                  package.badge.isEmpty ? '⭐' : package.badge,
+                ),
+              ),
+              title: Text(
+                '${formatNumber(package.points)} نقطة',
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              subtitle: Text(
+                '${formatNumber(package.price)} د.ع',
+              ),
+              trailing: const Icon(
+                Icons.arrow_forward_ios,
+                size: 16,
+              ),
+              onTap: () {
+                showDialog(
+                  context: context,
+                  builder: (_) => AlertDialog(
+                    title: Text(
+                      '${formatNumber(package.points)} نقطة',
+                    ),
+                    content: Text(
+                      'السعر: ${formatNumber(package.price)} د.ع\n\n'
+                      'رقم الدفع:\n07760656110\n\n'
+                      'بعد إتمام الدفع اضغط "إرسال طلب".',
+                      textDirection: TextDirection.rtl,
+                    ),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(context),
+                        child: const Text('إلغاء'),
+                      ),
+                      ElevatedButton(
+                        onPressed: () {
+                          Navigator.pop(context);
+                          createPurchaseRequest(
+                            context,
+                            package,
+                          );
+                        },
+                        child: const Text('إرسال طلب'),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
+          );
+        },
+      ),
     );
   }
 }
