@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import 'firebase_options.dart';
 
@@ -102,7 +103,7 @@ class _LoginPageState extends State<LoginPage> {
 
   Future<void> submit() async {
     final email = emailController.text.trim();
-    final password = passwordController.text.trim();
+    final password = passwordController.text;
 
     if (email.isEmpty || password.isEmpty) {
       showMessage('اكتب البريد الإلكتروني وكلمة المرور');
@@ -151,29 +152,23 @@ class _LoginPageState extends State<LoginPage> {
         case 'invalid-email':
           message = 'البريد الإلكتروني غير صحيح';
           break;
-
         case 'user-not-found':
         case 'wrong-password':
         case 'invalid-credential':
           message = 'البريد الإلكتروني أو كلمة المرور غير صحيحة';
           break;
-
         case 'email-already-in-use':
           message = 'هذا البريد مستخدم مسبقاً';
           break;
-
         case 'weak-password':
           message = 'كلمة المرور ضعيفة';
           break;
-
         case 'too-many-requests':
           message = 'محاولات كثيرة، حاول لاحقاً';
           break;
-
         case 'network-request-failed':
           message = 'تحقق من اتصال الإنترنت';
           break;
-
         default:
           message = e.message ?? 'حدث خطأ أثناء المصادقة';
       }
@@ -243,9 +238,7 @@ class _LoginPageState extends State<LoginPage> {
                   size: 80,
                   color: Colors.deepPurpleAccent,
                 ),
-
                 const SizedBox(height: 15),
-
                 const Text(
                   'رشق مواس',
                   textAlign: TextAlign.center,
@@ -254,9 +247,7 @@ class _LoginPageState extends State<LoginPage> {
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-
                 const SizedBox(height: 8),
-
                 Text(
                   isRegisterMode
                       ? 'أنشئ حسابك وابدأ الآن'
@@ -267,9 +258,7 @@ class _LoginPageState extends State<LoginPage> {
                     fontSize: 16,
                   ),
                 ),
-
                 const SizedBox(height: 35),
-
                 TextField(
                   controller: emailController,
                   keyboardType: TextInputType.emailAddress,
@@ -282,9 +271,7 @@ class _LoginPageState extends State<LoginPage> {
                     ),
                   ),
                 ),
-
                 const SizedBox(height: 15),
-
                 TextField(
                   controller: passwordController,
                   obscureText: obscurePassword,
@@ -309,9 +296,7 @@ class _LoginPageState extends State<LoginPage> {
                     ),
                   ),
                 ),
-
                 const SizedBox(height: 20),
-
                 SizedBox(
                   height: 55,
                   child: ElevatedButton(
@@ -335,17 +320,12 @@ class _LoginPageState extends State<LoginPage> {
                           ),
                   ),
                 ),
-
                 const SizedBox(height: 10),
-
                 if (!isRegisterMode)
                   TextButton(
                     onPressed: isLoading ? null : resetPassword,
-                    child: const Text(
-                      'نسيت كلمة المرور؟',
-                    ),
+                    child: const Text('نسيت كلمة المرور؟'),
                   ),
-
                 TextButton(
                   onPressed: isLoading
                       ? null
@@ -424,6 +404,21 @@ class HomePage extends StatelessWidget {
     return buffer.toString();
   }
 
+  Future<void> copyUid(BuildContext context, String uid) async {
+    await Clipboard.setData(ClipboardData(text: uid));
+
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'تم نسخ UID بنجاح ✅',
+            textDirection: TextDirection.rtl,
+          ),
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final user = FirebaseAuth.instance.currentUser;
@@ -459,7 +454,6 @@ class HomePage extends StatelessWidget {
         }
 
         final role = data['role'] as String? ?? 'user';
-
         final bool isDeveloper = role == 'admin';
 
         return Scaffold(
@@ -507,9 +501,7 @@ class HomePage extends StatelessWidget {
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-
                       const SizedBox(height: 10),
-
                       if (user.email != null)
                         Text(
                           user.email!,
@@ -518,16 +510,12 @@ class HomePage extends StatelessWidget {
                             color: Colors.white70,
                           ),
                         ),
-
                       const SizedBox(height: 12),
-
                       const Text(
                         'رصيد النقاط',
                         style: TextStyle(fontSize: 15),
                       ),
-
                       const SizedBox(height: 4),
-
                       Text(
                         isDeveloper
                             ? '∞ نقطة'
@@ -544,19 +532,47 @@ class HomePage extends StatelessWidget {
                 const SizedBox(height: 15),
 
                 Card(
-                  child: ListTile(
-                    leading: const CircleAvatar(
-                      child: Icon(Icons.badge),
-                    ),
-                    title: const Text(
-                      'معرّف الحساب UID',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    subtitle: SelectableText(
-                      user.uid,
-                      textDirection: TextDirection.ltr,
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        const Row(
+                          children: [
+                            CircleAvatar(
+                              child: Icon(Icons.badge),
+                            ),
+                            SizedBox(width: 12),
+                            Text(
+                              'معرّف الحساب UID',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 17,
+                              ),
+                            ),
+                          ],
+                        ),
+
+                        const SizedBox(height: 12),
+
+                        SelectableText(
+                          user.uid,
+                          textDirection: TextDirection.ltr,
+                          style: const TextStyle(
+                            fontSize: 13,
+                          ),
+                        ),
+
+                        const SizedBox(height: 12),
+
+                        ElevatedButton.icon(
+                          onPressed: () {
+                            copyUid(context, user.uid);
+                          },
+                          icon: const Icon(Icons.copy),
+                          label: const Text('نسخ UID'),
+                        ),
+                      ],
                     ),
                   ),
                 ),
