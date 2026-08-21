@@ -2,7 +2,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 
 import 'firebase_options.dart';
 
@@ -103,7 +102,7 @@ class _LoginPageState extends State<LoginPage> {
 
   Future<void> submit() async {
     final email = emailController.text.trim();
-    final password = passwordController.text;
+    final password = passwordController.text.trim();
 
     if (email.isEmpty || password.isEmpty) {
       showMessage('اكتب البريد الإلكتروني وكلمة المرور');
@@ -404,21 +403,6 @@ class HomePage extends StatelessWidget {
     return buffer.toString();
   }
 
-  Future<void> copyUid(BuildContext context, String uid) async {
-    await Clipboard.setData(ClipboardData(text: uid));
-
-    if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'تم نسخ UID بنجاح ✅',
-            textDirection: TextDirection.rtl,
-          ),
-        ),
-      );
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final user = FirebaseAuth.instance.currentUser;
@@ -442,7 +426,6 @@ class HomePage extends StatelessWidget {
         }
 
         final data = snapshot.data?.data() ?? {};
-
         final pointsValue = data['points'];
 
         int points = 0;
@@ -532,47 +515,19 @@ class HomePage extends StatelessWidget {
                 const SizedBox(height: 15),
 
                 Card(
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        const Row(
-                          children: [
-                            CircleAvatar(
-                              child: Icon(Icons.badge),
-                            ),
-                            SizedBox(width: 12),
-                            Text(
-                              'معرّف الحساب UID',
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 17,
-                              ),
-                            ),
-                          ],
-                        ),
-
-                        const SizedBox(height: 12),
-
-                        SelectableText(
-                          user.uid,
-                          textDirection: TextDirection.ltr,
-                          style: const TextStyle(
-                            fontSize: 13,
-                          ),
-                        ),
-
-                        const SizedBox(height: 12),
-
-                        ElevatedButton.icon(
-                          onPressed: () {
-                            copyUid(context, user.uid);
-                          },
-                          icon: const Icon(Icons.copy),
-                          label: const Text('نسخ UID'),
-                        ),
-                      ],
+                  child: ListTile(
+                    leading: const CircleAvatar(
+                      child: Icon(Icons.badge),
+                    ),
+                    title: const Text(
+                      'معرّف الحساب UID',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    subtitle: SelectableText(
+                      user.uid,
+                      textDirection: TextDirection.ltr,
                     ),
                   ),
                 ),
@@ -592,7 +547,15 @@ class HomePage extends StatelessWidget {
                 _ServiceCard(
                   icon: Icons.people_alt,
                   title: 'متابعين ثابتين',
-                  onTap: () {},
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) =>
+                            const FollowersServicePage(),
+                      ),
+                    );
+                  },
                 ),
 
                 _ServiceCard(
@@ -641,9 +604,7 @@ class HomePage extends StatelessWidget {
                     padding: EdgeInsets.all(14),
                     child: Text(
                       'شراء النقاط',
-                      style: TextStyle(
-                        fontSize: 18,
-                      ),
+                      style: TextStyle(fontSize: 18),
                     ),
                   ),
                 ),
@@ -816,6 +777,221 @@ class PackagesPage extends StatelessWidget {
             ),
           );
         },
+      ),
+    );
+  }
+}
+
+class FollowersServicePage extends StatefulWidget {
+  const FollowersServicePage({super.key});
+
+  @override
+  State<FollowersServicePage> createState() =>
+      _FollowersServicePageState();
+}
+
+class _FollowersServicePageState
+    extends State<FollowersServicePage> {
+  final linkController = TextEditingController();
+  final quantityController = TextEditingController();
+
+  bool isLoading = false;
+
+  @override
+  void dispose() {
+    linkController.dispose();
+    quantityController.dispose();
+    super.dispose();
+  }
+
+  Future<void> submitRequest() async {
+    final user = FirebaseAuth.instance.currentUser;
+
+    final link = linkController.text.trim();
+    final quantityText = quantityController.text.trim();
+
+    if (user == null) {
+      showMessage('يجب تسجيل الدخول أولاً');
+      return;
+    }
+
+    if (link.isEmpty) {
+      showMessage('أدخل الرابط');
+      return;
+    }
+
+    final quantity = int.tryParse(quantityText);
+
+    if (quantity == null || quantity <= 0) {
+      showMessage('أدخل كمية صحيحة');
+      return;
+    }
+
+    setState(() {
+      isLoading = true;
+    });
+
+    try {
+      await FirebaseFirestore.instance
+          .collection('service_requests')
+          .add({
+        'userId': user.uid,
+        'email': user.email,
+        'service': 'followers',
+        'serviceName': 'متابعين ثابتين',
+        'link': link,
+        'quantity': quantity,
+        'status': 'pending',
+        'createdAt': FieldValue.serverTimestamp(),
+      });
+
+      linkController.clear();
+      quantityController.clear();
+
+      if (mounted) {
+        showMessage('تم إرسال الطلب للمراجعة ✅');
+      }
+    } on FirebaseException catch (e) {
+      if (mounted) {
+        showMessage(
+          e.message ?? 'تعذر إرسال الطلب',
+        );
+      }
+    } catch (_) {
+      if (mounted) {
+        showMessage('حدث خطأ غير متوقع');
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          isLoading = false;
+        });
+      }
+    }
+  }
+
+  void showMessage(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          message,
+          textDirection: TextDirection.rtl,
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('متابعين ثابتين'),
+        centerTitle: true,
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(20),
+                gradient: const LinearGradient(
+                  colors: [
+                    Color(0xFF6C2BD9),
+                    Color(0xFFB52BD9),
+                  ],
+                ),
+              ),
+              child: const Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(
+                    Icons.people_alt,
+                    size: 45,
+                  ),
+                  SizedBox(height: 12),
+                  Text(
+                    'متابعين ثابتين',
+                    style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  SizedBox(height: 8),
+                  Text(
+                    'أرسل طلب الخدمة وسيتم مراجعته.',
+                    style: TextStyle(
+                      color: Colors.white70,
+                      fontSize: 14,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 25),
+
+            TextField(
+              controller: linkController,
+              keyboardType: TextInputType.url,
+              textDirection: TextDirection.ltr,
+              decoration: InputDecoration(
+                labelText: 'الرابط',
+                hintText: 'https://...',
+                prefixIcon: const Icon(Icons.link),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(14),
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 15),
+
+            TextField(
+              controller: quantityController,
+              keyboardType: TextInputType.number,
+              textDirection: TextDirection.ltr,
+              decoration: InputDecoration(
+                labelText: 'الكمية',
+                hintText: 'مثال: 1000',
+                prefixIcon: const Icon(Icons.numbers),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(14),
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 25),
+
+            SizedBox(
+              height: 55,
+              child: ElevatedButton.icon(
+                onPressed:
+                    isLoading ? null : submitRequest,
+                icon: isLoading
+                    ? const SizedBox(
+                        width: 22,
+                        height: 22,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                        ),
+                      )
+                    : const Icon(Icons.send),
+                label: Text(
+                  isLoading
+                      ? 'جاري الإرسال...'
+                      : 'إرسال الطلب',
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
