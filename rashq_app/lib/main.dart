@@ -67,10 +67,6 @@ class RashqMawasApp extends StatelessWidget {
   }
 }
 
-/* =========================
-   AUTH GATE
-========================= */
-
 class AuthGate extends StatelessWidget {
   const AuthGate({super.key});
 
@@ -105,10 +101,6 @@ class SplashPage extends StatelessWidget {
     );
   }
 }
-
-/* =========================
-   LOGIN
-========================= */
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -307,7 +299,7 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                   child: ClipOval(
                     child: Image.asset(
-                      'assets/rashq_mawas_icon.png',
+                      'assets/file_00000000b14c8246975f949ff9c7408c.png',
                       fit: BoxFit.cover,
                       errorBuilder: (_, __, ___) {
                         return const Icon(
@@ -424,10 +416,6 @@ class _LoginPageState extends State<LoginPage> {
   }
 }
 
-/* =========================
-   PACKAGES
-========================= */
-
 class PointPackage {
   final int points;
   final int price;
@@ -461,10 +449,6 @@ const packages = <PointPackage>[
   PointPackage(points: 400000, price: 145000),
   PointPackage(points: 500000, price: 175000, badge: '🔥'),
 ];
-
-/* =========================
-   HOME
-========================= */
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
@@ -570,8 +554,7 @@ class HomePage extends StatelessWidget {
                       ),
                     ),
                     child: Column(
-                      crossAxisAlignment:
-                          CrossAxisAlignment.start,
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
                           isDeveloper
@@ -719,10 +702,6 @@ class HomePage extends StatelessWidget {
   }
 }
 
-/* =========================
-   SERVICE CARD
-========================= */
-
 class _ServiceCard extends StatelessWidget {
   final IconData icon;
   final String title;
@@ -774,10 +753,6 @@ void showComingSoon(BuildContext context) {
     ),
   );
 }
-
-/* =========================
-   PACKAGES PAGE
-========================= */
 
 class PackagesPage extends StatelessWidget {
   const PackagesPage({super.key});
@@ -938,10 +913,6 @@ class PackagesPage extends StatelessWidget {
     );
   }
 }
-
-/* =========================
-   FOLLOWERS SERVICE
-========================= */
 
 class FollowersServicePage extends StatefulWidget {
   const FollowersServicePage({super.key});
@@ -1150,10 +1121,6 @@ class _FollowersServicePageState
   }
 }
 
-/* =========================
-   ADMIN PAGE
-========================= */
-
 class AdminPage extends StatelessWidget {
   const AdminPage({super.key});
 
@@ -1315,10 +1282,6 @@ class _AdminCard extends StatelessWidget {
     );
   }
 }
-
-/* =========================
-   PURCHASE REQUESTS
-========================= */
 
 class PurchaseRequestsPage
     extends StatelessWidget {
@@ -1654,10 +1617,6 @@ class PurchaseRequestsPage
   }
 }
 
-/* =========================
-   SERVICE REQUESTS
-========================= */
-
 class ServiceRequestsPage
     extends StatelessWidget {
   const ServiceRequestsPage({super.key});
@@ -1759,4 +1718,661 @@ class ServiceRequestsPage
               itemCount: docs.length,
               itemBuilder:
                   (context, index) {
-                final doc 
+                final doc =
+                    docs[index];
+
+                final data =
+                    doc.data();
+
+                final serviceName =
+                    data['serviceName']
+                            as String? ??
+                        'خدمة';
+
+                final link =
+                    data['link']
+                            as String? ??
+                        '';
+
+                final quantity =
+                    (data['quantity']
+                                as num?)
+                            ?.toInt() ??
+                        0;
+
+                final email =
+                    data['email']
+                            as String? ??
+                        'بدون بريد';
+
+                final status =
+                    data['status']
+                            as String? ??
+                        'pending';
+
+                return Card(
+                  margin:
+                      const EdgeInsets.only(
+                    bottom: 12,
+                  ),
+                  child: Padding(
+                    padding:
+                        const EdgeInsets.all(
+                      14,
+                    ),
+                    child: Column(
+                      crossAxisAlignment:
+                          CrossAxisAlignment
+                              .start,
+                      children: [
+                        Text(
+                          serviceName,
+                          style:
+                              const TextStyle(
+                            fontSize: 20,
+                            fontWeight:
+                                FontWeight
+                                    .bold,
+                          ),
+                        ),
+                        const SizedBox(
+                          height: 8,
+                        ),
+                        Text(
+                          'الكمية: $quantity',
+                        ),
+                        const SizedBox(
+                          height: 8,
+                        ),
+                        Text(
+                          email,
+                          textDirection:
+                              TextDirection
+                                  .ltr,
+                        ),
+                        const SizedBox(
+                          height: 8,
+                        ),
+                        const Text(
+                          'الرابط:',
+                          style:
+                              TextStyle(
+                            fontWeight:
+                                FontWeight
+                                    .bold,
+                          ),
+                        ),
+                        const SizedBox(
+                          height: 4,
+                        ),
+                        SelectableText(
+                          link,
+                          textDirection:
+                              TextDirection
+                                  .ltr,
+                        ),
+                        const SizedBox(
+                          height: 10,
+                        ),
+                        _StatusChip(
+                          status: status,
+                        ),
+                        if (status ==
+                            'pending') ...[
+                          const SizedBox(
+                            height: 12,
+                          ),
+                          Row(
+                            children: [
+                              Expanded(
+                                child:
+                                    ElevatedButton
+                                        .icon(
+                                  onPressed:
+                                      () {
+                                    updateService(
+                                      context,
+                                      doc.id,
+                                      'approved',
+                                    );
+                                  },
+                                  icon:
+                                      const Icon(
+                                    Icons
+                                        .check,
+                                  ),
+                                  label:
+                                      const Text(
+                                    'قبول',
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(
+                                width: 10,
+                              ),
+                              Expanded(
+                                child:
+                                    OutlinedButton
+                                        .icon(
+                                  onPressed:
+                                      () {
+                                    updateService(
+                                      context,
+                                      doc.id,
+                                      'rejected',
+                                    );
+                                  },
+                                  icon:
+                                      const Icon(
+                                    Icons
+                                        .close,
+                                  ),
+                                  label:
+                                      const Text(
+                                    'رفض',
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                );
+              },
+            );
+          },
+        ),
+      ),
+    );
+  }
+}
+
+class UsersPage extends StatelessWidget {
+  const UsersPage({super.key});
+
+  String formatNumber(int number) {
+    return number.toString().replaceAllMapped(
+          RegExp(r'(\d)(?=(\d{3})+(?!\d))'),
+          (match) => '${match[1]},',
+        );
+  }
+
+  Future<void> addPoints(
+    BuildContext context,
+    String userId,
+    int currentPoints,
+  ) async {
+    final controller = TextEditingController();
+
+    await showDialog(
+      context: context,
+      builder: (_) {
+        return AlertDialog(
+          title: const Text('إضافة نقاط'),
+          content: TextField(
+            controller: controller,
+            keyboardType: TextInputType.number,
+            decoration: const InputDecoration(
+              labelText: 'عدد النقاط',
+              hintText: 'مثال: 1000',
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: const Text('إلغاء'),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                final amount =
+                    int.tryParse(
+                  controller.text.trim(),
+                );
+
+                if (amount == null ||
+                    amount <= 0) {
+                  return;
+                }
+
+                try {
+                  await FirebaseFirestore
+                      .instance
+                      .collection('users')
+                      .doc(userId)
+                      .update({
+                    'points':
+                        currentPoints + amount,
+                  });
+
+                  if (context.mounted) {
+                    Navigator.pop(context);
+
+                    ScaffoldMessenger.of(
+                            context)
+                        .showSnackBar(
+                      const SnackBar(
+                        content: Text(
+                          'تمت إضافة النقاط ✅',
+                        ),
+                      ),
+                    );
+                  }
+                } catch (e) {
+                  if (context.mounted) {
+                    Navigator.pop(context);
+
+                    ScaffoldMessenger.of(
+                            context)
+                        .showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          'تعذر إضافة النقاط: $e',
+                        ),
+                      ),
+                    );
+                  }
+                }
+              },
+              child: const Text('إضافة'),
+            ),
+          ],
+        );
+      },
+    );
+
+    controller.dispose();
+  }
+
+  Future<void> removePoints(
+    BuildContext context,
+    String userId,
+    int currentPoints,
+  ) async {
+    final controller = TextEditingController();
+
+    await showDialog(
+      context: context,
+      builder: (_) {
+        return AlertDialog(
+          title: const Text('خصم نقاط'),
+          content: TextField(
+            controller: controller,
+            keyboardType: TextInputType.number,
+            decoration: const InputDecoration(
+              labelText: 'عدد النقاط',
+              hintText: 'مثال: 500',
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: const Text('إلغاء'),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                final amount =
+                    int.tryParse(
+                  controller.text.trim(),
+                );
+
+                if (amount == null ||
+                    amount <= 0) {
+                  return;
+                }
+
+                final newPoints =
+                    currentPoints - amount < 0
+                        ? 0
+                        : currentPoints - amount;
+
+                try {
+                  await FirebaseFirestore
+                      .instance
+                      .collection('users')
+                      .doc(userId)
+                      .update({
+                    'points': newPoints,
+                  });
+
+                  if (context.mounted) {
+                    Navigator.pop(context);
+
+                    ScaffoldMessenger.of(
+                            context)
+                        .showSnackBar(
+                      const SnackBar(
+                        content: Text(
+                          'تم خصم النقاط ✅',
+                        ),
+                      ),
+                    );
+                  }
+                } catch (e) {
+                  if (context.mounted) {
+                    Navigator.pop(context);
+
+                    ScaffoldMessenger.of(
+                            context)
+                        .showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          'تعذر خصم النقاط: $e',
+                        ),
+                      ),
+                    );
+                  }
+                }
+              },
+              child: const Text('خصم'),
+            ),
+          ],
+        );
+      },
+    );
+
+    controller.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('المستخدمون'),
+      ),
+      body: Directionality(
+        textDirection: TextDirection.rtl,
+        child: StreamBuilder<
+            QuerySnapshot<
+                Map<String, dynamic>>>(
+          stream: FirebaseFirestore.instance
+              .collection('users')
+              .orderBy(
+                'createdAt',
+                descending: true,
+              )
+              .snapshots(),
+          builder:
+              (context, snapshot) {
+            if (snapshot.hasError) {
+              return Center(
+                child: Text(
+                  'حدث خطأ: ${snapshot.error}',
+                  textAlign:
+                      TextAlign.center,
+                ),
+              );
+            }
+
+            if (!snapshot.hasData) {
+              return const Center(
+                child:
+                    CircularProgressIndicator(),
+              );
+            }
+
+            final docs =
+                snapshot.data!.docs;
+
+            if (docs.isEmpty) {
+              return const Center(
+                child: Text(
+                  'لا يوجد مستخدمون',
+                ),
+              );
+            }
+
+            return ListView.builder(
+              padding:
+                  const EdgeInsets.all(12),
+              itemCount: docs.length,
+              itemBuilder:
+                  (context, index) {
+                final doc =
+                    docs[index];
+
+                final data =
+                    doc.data();
+
+                final email =
+                    data['email']
+                            as String? ??
+                        'بدون بريد';
+
+                final role =
+                    data['role']
+                            as String? ??
+                        'user';
+
+                final points =
+                    (data['points']
+                                as num?)
+                            ?.toInt() ??
+                        0;
+
+                final isAdmin =
+                    role == 'admin';
+
+                return Card(
+                  margin:
+                      const EdgeInsets.only(
+                    bottom: 12,
+                  ),
+                  child: Padding(
+                    padding:
+                        const EdgeInsets.all(
+                      14,
+                    ),
+                    child: Column(
+                      crossAxisAlignment:
+                          CrossAxisAlignment
+                              .start,
+                      children: [
+                        Row(
+                          children: [
+                            CircleAvatar(
+                              radius: 25,
+                              child: Icon(
+                                isAdmin
+                                    ? Icons
+                                        .admin_panel_settings
+                                    : Icons
+                                        .person,
+                              ),
+                            ),
+                            const SizedBox(
+                              width: 12,
+                            ),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment:
+                                    CrossAxisAlignment
+                                        .start,
+                                children: [
+                                  Text(
+                                    email,
+                                    textDirection:
+                                        TextDirection
+                                            .ltr,
+                                    style:
+                                        const TextStyle(
+                                      fontWeight:
+                                          FontWeight
+                                              .bold,
+                                    ),
+                                  ),
+                                  const SizedBox(
+                                    height: 5,
+                                  ),
+                                  Text(
+                                    isAdmin
+                                        ? 'مطور 👑'
+                                        : 'مستخدم',
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(
+                          height: 12,
+                        ),
+                        Container(
+                          width:
+                              double.infinity,
+                          padding:
+                              const EdgeInsets
+                                  .all(12),
+                          decoration:
+                              BoxDecoration(
+                            borderRadius:
+                                BorderRadius
+                                    .circular(
+                              12,
+                            ),
+                            color:
+                                Colors.white10,
+                          ),
+                          child: Text(
+                            'الرصيد: ${formatNumber(points)} نقطة',
+                            style:
+                                const TextStyle(
+                              fontSize: 17,
+                              fontWeight:
+                                  FontWeight
+                                      .bold,
+                            ),
+                          ),
+                        ),
+                        if (!isAdmin) ...[
+                          const SizedBox(
+                            height: 12,
+                          ),
+                          Row(
+                            children: [
+                              Expanded(
+                                child:
+                                    ElevatedButton
+                                        .icon(
+                                  onPressed:
+                                      () {
+                                    addPoints(
+                                      context,
+                                      doc.id,
+                                      points,
+                                    );
+                                  },
+                                  icon:
+                                      const Icon(
+                                    Icons.add,
+                                  ),
+                                  label:
+                                      const Text(
+                                    'إضافة',
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(
+                                width: 10,
+                              ),
+                              Expanded(
+                                child:
+                                    OutlinedButton
+                                        .icon(
+                                  onPressed:
+                                      () {
+                                    removePoints(
+                                      context,
+                                      doc.id,
+                                      points,
+                                    );
+                                  },
+                                  icon:
+                                      const Icon(
+                                    Icons
+                                        .remove,
+                                  ),
+                                  label:
+                                      const Text(
+                                    'خصم',
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                );
+              },
+            );
+          },
+        ),
+      ),
+    );
+  }
+}
+
+class _StatusChip extends StatelessWidget {
+  final String status;
+
+  const _StatusChip({
+    required this.status,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    String text;
+
+    IconData icon;
+
+    switch (status) {
+      case 'approved':
+        text = 'مقبول';
+        icon = Icons.check_circle;
+        break;
+
+      case 'rejected':
+        text = 'مرفوض';
+        icon = Icons.cancel;
+        break;
+
+      default:
+        text = 'قيد المراجعة';
+        icon = Icons.hourglass_top;
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: 12,
+        vertical: 8,
+      ),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(20),
+        color: Colors.white10,
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            icon,
+            size: 18,
+          ),
+          const SizedBox(width: 6),
+          Text(
+            text,
+            style: const TextStyle(
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
