@@ -25,16 +25,43 @@ class RashqMawasApp extends StatelessWidget {
       title: 'رشق مواس',
       theme: ThemeData(
         useMaterial3: true,
+        brightness: Brightness.dark,
         colorScheme: ColorScheme.fromSeed(
-          seedColor: Colors.deepPurple,
+          seedColor: const Color(0xFF8B35D9),
           brightness: Brightness.dark,
         ),
         scaffoldBackgroundColor: const Color(0xFF0D0B14),
+        appBarTheme: const AppBarTheme(
+          centerTitle: true,
+          backgroundColor: Color(0xFF0D0B14),
+        ),
+        inputDecorationTheme: InputDecorationTheme(
+          filled: true,
+          fillColor: const Color(0xFF17131F),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.all(Radius.circular(14)),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.all(Radius.circular(14)),
+            borderSide: BorderSide(color: Colors.white12),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.all(Radius.circular(14)),
+            borderSide: BorderSide(
+              color: Color(0xFF9C4DFF),
+              width: 1.5,
+            ),
+          ),
+        ),
       ),
       home: const AuthGate(),
     );
   }
 }
+
+/* =========================
+   AUTH GATE
+========================= */
 
 class AuthGate extends StatelessWidget {
   const AuthGate({super.key});
@@ -45,11 +72,7 @@ class AuthGate extends StatelessWidget {
       stream: FirebaseAuth.instance.authStateChanges(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Scaffold(
-            body: Center(
-              child: CircularProgressIndicator(),
-            ),
-          );
+          return const SplashPage();
         }
 
         if (snapshot.hasData) {
@@ -61,6 +84,23 @@ class AuthGate extends StatelessWidget {
     );
   }
 }
+
+class SplashPage extends StatelessWidget {
+  const SplashPage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return const Scaffold(
+      body: Center(
+        child: CircularProgressIndicator(),
+      ),
+    );
+  }
+}
+
+/* =========================
+   LOGIN
+========================= */
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -232,17 +272,37 @@ class _LoginPageState extends State<LoginPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                const Icon(
-                  Icons.flash_on,
-                  size: 80,
-                  color: Colors.deepPurpleAccent,
+                Container(
+                  width: 100,
+                  height: 100,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: const LinearGradient(
+                      colors: [
+                        Color(0xFF6C2BD9),
+                        Color(0xFFB52BD9),
+                      ],
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.purple.withOpacity(0.35),
+                        blurRadius: 30,
+                        spreadRadius: 5,
+                      ),
+                    ],
+                  ),
+                  child: const Icon(
+                    Icons.flash_on,
+                    size: 55,
+                    color: Colors.white,
+                  ),
                 ),
-                const SizedBox(height: 15),
+                const SizedBox(height: 20),
                 const Text(
                   'رشق مواس',
                   textAlign: TextAlign.center,
                   style: TextStyle(
-                    fontSize: 32,
+                    fontSize: 34,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
@@ -265,9 +325,6 @@ class _LoginPageState extends State<LoginPage> {
                   decoration: InputDecoration(
                     labelText: 'البريد الإلكتروني',
                     prefixIcon: const Icon(Icons.email),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(14),
-                    ),
                   ),
                 ),
                 const SizedBox(height: 15),
@@ -289,9 +346,6 @@ class _LoginPageState extends State<LoginPage> {
                             ? Icons.visibility
                             : Icons.visibility_off,
                       ),
-                    ),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(14),
                     ),
                   ),
                 ),
@@ -319,7 +373,7 @@ class _LoginPageState extends State<LoginPage> {
                           ),
                   ),
                 ),
-                const SizedBox(height: 10),
+                const SizedBox(height: 8),
                 if (!isRegisterMode)
                   TextButton(
                     onPressed: isLoading ? null : resetPassword,
@@ -347,6 +401,10 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 }
+
+/* =========================
+   PACKAGES
+========================= */
 
 class PointPackage {
   final int points;
@@ -382,12 +440,12 @@ const packages = <PointPackage>[
   PointPackage(points: 500000, price: 175000, badge: '🔥'),
 ];
 
+/* =========================
+   HOME
+========================= */
+
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
-
-  Future<void> logout() async {
-    await FirebaseAuth.instance.signOut();
-  }
 
   String formatNumber(int number) {
     final text = number.toString();
@@ -401,6 +459,10 @@ class HomePage extends StatelessWidget {
     }
 
     return buffer.toString();
+  }
+
+  Future<void> logout() async {
+    await FirebaseAuth.instance.signOut();
   }
 
   @override
@@ -418,14 +480,11 @@ class HomePage extends StatelessWidget {
       stream: userRef.snapshots(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Scaffold(
-            body: Center(
-              child: CircularProgressIndicator(),
-            ),
-          );
+          return const SplashPage();
         }
 
         final data = snapshot.data?.data() ?? {};
+
         final pointsValue = data['points'];
 
         int points = 0;
@@ -437,7 +496,7 @@ class HomePage extends StatelessWidget {
         }
 
         final role = data['role'] as String? ?? 'user';
-        final bool isDeveloper = role == 'admin';
+        final isDeveloper = role == 'admin';
 
         return Scaffold(
           appBar: AppBar(
@@ -447,8 +506,20 @@ class HomePage extends StatelessWidget {
                 fontWeight: FontWeight.bold,
               ),
             ),
-            centerTitle: true,
             actions: [
+              if (isDeveloper)
+                IconButton(
+                  tooltip: 'لوحة المطور',
+                  icon: const Icon(Icons.admin_panel_settings),
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const AdminPage(),
+                      ),
+                    );
+                  },
+                ),
               IconButton(
                 tooltip: 'تسجيل الخروج',
                 onPressed: logout,
@@ -456,159 +527,165 @@ class HomePage extends StatelessWidget {
               ),
             ],
           ),
-          body: SingleChildScrollView(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(20),
-                    gradient: const LinearGradient(
-                      colors: [
-                        Color(0xFF6C2BD9),
-                        Color(0xFFB52BD9),
+          body: Directionality(
+            textDirection: TextDirection.rtl,
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(22),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(24),
+                      gradient: const LinearGradient(
+                        colors: [
+                          Color(0xFF6C2BD9),
+                          Color(0xFFB52BD9),
+                        ],
+                      ),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          isDeveloper
+                              ? 'أهلاً بالمطور 👑'
+                              : 'أهلاً بك 👋',
+                          style: const TextStyle(
+                            fontSize: 25,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        if (user.email != null)
+                          Text(
+                            user.email!,
+                            textDirection: TextDirection.ltr,
+                            style: const TextStyle(
+                              color: Colors.white70,
+                              fontSize: 13,
+                            ),
+                          ),
+                        const SizedBox(height: 18),
+                        const Text(
+                          'رصيد النقاط',
+                          style: TextStyle(
+                            color: Colors.white70,
+                            fontSize: 15,
+                          ),
+                        ),
+                        const SizedBox(height: 3),
+                        Text(
+                          isDeveloper
+                              ? '∞ نقطة'
+                              : '${formatNumber(points)} نقطة',
+                          style: const TextStyle(
+                            fontSize: 32,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                       ],
                     ),
                   ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        isDeveloper
-                            ? 'أهلاً بالمطور 👑'
-                            : 'أهلاً بك 👋',
-                        style: const TextStyle(
-                          fontSize: 24,
+                  const SizedBox(height: 14),
+                  Card(
+                    child: ListTile(
+                      leading: const CircleAvatar(
+                        child: Icon(Icons.account_circle),
+                      ),
+                      title: const Text(
+                        'الحساب',
+                        style: TextStyle(
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                      const SizedBox(height: 10),
-                      if (user.email != null)
-                        Text(
-                          user.email!,
-                          style: const TextStyle(
-                            fontSize: 13,
-                            color: Colors.white70,
+                      subtitle: Text(
+                        isDeveloper ? 'مطور' : 'مستخدم',
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 22),
+                  const Text(
+                    'الخدمات',
+                    style: TextStyle(
+                      fontSize: 23,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  _ServiceCard(
+                    icon: Icons.people_alt,
+                    title: 'متابعين ثابتين',
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) =>
+                              const FollowersServicePage(),
+                        ),
+                      );
+                    },
+                  ),
+                  _ServiceCard(
+                    icon: Icons.favorite,
+                    title: 'لايكات ثابتين',
+                    onTap: () {
+                      showComingSoon(context);
+                    },
+                  ),
+                  _ServiceCard(
+                    icon: Icons.repeat,
+                    title: 'إعادة نشر ثابتين',
+                    onTap: () {
+                      showComingSoon(context);
+                    },
+                  ),
+                  _ServiceCard(
+                    icon: Icons.bookmark,
+                    title: 'حفظ ثابتين',
+                    onTap: () {
+                      showComingSoon(context);
+                    },
+                  ),
+                  _ServiceCard(
+                    icon: Icons.explore,
+                    title: 'إكسبلور ثابتين',
+                    onTap: () {
+                      showComingSoon(context);
+                    },
+                  ),
+                  _ServiceCard(
+                    icon: Icons.visibility,
+                    title: 'مشاهدات ثابتين',
+                    onTap: () {
+                      showComingSoon(context);
+                    },
+                  ),
+                  const SizedBox(height: 15),
+                  SizedBox(
+                    height: 55,
+                    child: ElevatedButton.icon(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const PackagesPage(),
                           ),
-                        ),
-                      const SizedBox(height: 12),
-                      const Text(
-                        'رصيد النقاط',
-                        style: TextStyle(fontSize: 15),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        isDeveloper
-                            ? '∞ نقطة'
-                            : '${formatNumber(points)} نقطة',
-                        style: const TextStyle(
-                          fontSize: 30,
+                        );
+                      },
+                      icon: const Icon(Icons.shopping_cart),
+                      label: const Text(
+                        'شراء النقاط',
+                        style: TextStyle(
+                          fontSize: 18,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                    ],
-                  ),
-                ),
-
-                const SizedBox(height: 15),
-
-                Card(
-                  child: ListTile(
-                    leading: const CircleAvatar(
-                      child: Icon(Icons.badge),
-                    ),
-                    title: const Text(
-                      'معرّف الحساب UID',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    subtitle: SelectableText(
-                      user.uid,
-                      textDirection: TextDirection.ltr,
                     ),
                   ),
-                ),
-
-                const SizedBox(height: 24),
-
-                const Text(
-                  'الخدمات',
-                  style: TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-
-                const SizedBox(height: 12),
-
-                _ServiceCard(
-                  icon: Icons.people_alt,
-                  title: 'متابعين ثابتين',
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) =>
-                            const FollowersServicePage(),
-                      ),
-                    );
-                  },
-                ),
-
-                _ServiceCard(
-                  icon: Icons.favorite,
-                  title: 'لايكات ثابتين',
-                  onTap: () {},
-                ),
-
-                _ServiceCard(
-                  icon: Icons.repeat,
-                  title: 'إعادة نشر ثابتين',
-                  onTap: () {},
-                ),
-
-                _ServiceCard(
-                  icon: Icons.bookmark,
-                  title: 'حفظ ثابتين',
-                  onTap: () {},
-                ),
-
-                _ServiceCard(
-                  icon: Icons.explore,
-                  title: 'إكسبلور ثابتين',
-                  onTap: () {},
-                ),
-
-                _ServiceCard(
-                  icon: Icons.visibility,
-                  title: 'مشاهدات ثابتين',
-                  onTap: () {},
-                ),
-
-                const SizedBox(height: 20),
-
-                ElevatedButton.icon(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => const PackagesPage(),
-                      ),
-                    );
-                  },
-                  icon: const Icon(Icons.shopping_cart),
-                  label: const Padding(
-                    padding: EdgeInsets.all(14),
-                    child: Text(
-                      'شراء النقاط',
-                      style: TextStyle(fontSize: 18),
-                    ),
-                  ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         );
@@ -616,6 +693,21 @@ class HomePage extends StatelessWidget {
     );
   }
 }
+
+void showComingSoon(BuildContext context) {
+  ScaffoldMessenger.of(context).showSnackBar(
+    const SnackBar(
+      content: Text(
+        'هذه الخدمة سيتم تفعيلها قريباً 🚀',
+        textDirection: TextDirection.rtl,
+      ),
+    ),
+  );
+}
+
+/* =========================
+   PACKAGES PAGE
+========================= */
 
 class PackagesPage extends StatelessWidget {
   const PackagesPage({super.key});
@@ -628,7 +720,6 @@ class PackagesPage extends StatelessWidget {
       if (i > 0 && (text.length - i) % 3 == 0) {
         buffer.write(',');
       }
-
       buffer.write(text[i]);
     }
 
@@ -642,12 +733,7 @@ class PackagesPage extends StatelessWidget {
     final user = FirebaseAuth.instance.currentUser;
 
     if (user == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('يجب تسجيل الدخول أولاً'),
-        ),
-      );
-
+      showMessage(context, 'يجب تسجيل الدخول أولاً');
       return;
     }
 
@@ -675,14 +761,12 @@ class PackagesPage extends StatelessWidget {
               'رقم الدفع:\n'
               '07760656110\n\n'
               'تم إرسال طلبك للمراجعة. '
-              'لن تتم إضافة النقاط إلا بعد التحقق وقبول الطلب.',
+              'لن تتم إضافة النقاط إلا بعد قبول الطلب.',
               textDirection: TextDirection.rtl,
             ),
             actions: [
               TextButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                },
+                onPressed: () => Navigator.pop(context),
                 child: const Text('حسنًا'),
               ),
             ],
@@ -691,15 +775,23 @@ class PackagesPage extends StatelessWidget {
       }
     } on FirebaseException catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              e.message ?? 'تعذر إرسال الطلب',
-            ),
-          ),
+        showMessage(
+          context,
+          e.message ?? 'تعذر إرسال الطلب',
         );
       }
     }
+  }
+
+  void showMessage(BuildContext context, String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          message,
+          textDirection: TextDirection.rtl,
+        ),
+      ),
+    );
   }
 
   @override
@@ -707,80 +799,84 @@ class PackagesPage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('باقات النقاط'),
-        centerTitle: true,
       ),
-      body: ListView.builder(
-        padding: const EdgeInsets.all(16),
-        itemCount: packages.length,
-        itemBuilder: (context, index) {
-          final package = packages[index];
+      body: Directionality(
+        textDirection: TextDirection.rtl,
+        child: ListView.builder(
+          padding: const EdgeInsets.all(16),
+          itemCount: packages.length,
+          itemBuilder: (context, index) {
+            final package = packages[index];
 
-          return Card(
-            margin: const EdgeInsets.only(bottom: 10),
-            child: ListTile(
-              leading: CircleAvatar(
-                child: Text(
-                  package.badge.isEmpty
-                      ? '⭐'
-                      : package.badge,
-                ),
-              ),
-              title: Text(
-                '${formatNumber(package.points)} نقطة',
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              subtitle: Text(
-                '${formatNumber(package.price)} د.ع',
-              ),
-              trailing: const Icon(
-                Icons.arrow_forward_ios,
-                size: 16,
-              ),
-              onTap: () {
-                showDialog(
-                  context: context,
-                  builder: (_) => AlertDialog(
-                    title: Text(
-                      '${formatNumber(package.points)} نقطة',
-                    ),
-                    content: Text(
-                      'السعر: ${formatNumber(package.price)} د.ع\n\n'
-                      'رقم الدفع:\n'
-                      '07760656110\n\n'
-                      'بعد إتمام الدفع اضغط "إرسال طلب".',
-                      textDirection: TextDirection.rtl,
-                    ),
-                    actions: [
-                      TextButton(
-                        onPressed: () {
-                          Navigator.pop(context);
-                        },
-                        child: const Text('إلغاء'),
-                      ),
-                      ElevatedButton(
-                        onPressed: () {
-                          Navigator.pop(context);
-
-                          createPurchaseRequest(
-                            context,
-                            package,
-                          );
-                        },
-                        child: const Text('إرسال طلب'),
-                      ),
-                    ],
+            return Card(
+              margin: const EdgeInsets.only(bottom: 10),
+              child: ListTile(
+                leading: CircleAvatar(
+                  child: Text(
+                    package.badge.isEmpty
+                        ? '⭐'
+                        : package.badge,
                   ),
-                );
-              },
-            ),
-          );
-        },
+                ),
+                title: Text(
+                  '${formatNumber(package.points)} نقطة',
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                subtitle: Text(
+                  '${formatNumber(package.price)} د.ع',
+                ),
+                trailing: const Icon(
+                  Icons.arrow_forward_ios,
+                  size: 16,
+                ),
+                onTap: () {
+                  showDialog(
+                    context: context,
+                    builder: (_) => AlertDialog(
+                      title: Text(
+                        '${formatNumber(package.points)} نقطة',
+                      ),
+                      content: Text(
+                        'السعر: ${formatNumber(package.price)} د.ع\n\n'
+                        'رقم الدفع:\n'
+                        '07760656110\n\n'
+                        'بعد إتمام الدفع اضغط "إرسال طلب".',
+                        textDirection: TextDirection.rtl,
+                      ),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(context),
+                          child: const Text('إلغاء'),
+                        ),
+                        ElevatedButton(
+                          onPressed: () {
+                            Navigator.pop(context);
+
+                            createPurchaseRequest(
+                              context,
+                              package,
+                            );
+                          },
+                          child: const Text('إرسال طلب'),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
+            );
+          },
+        ),
       ),
     );
   }
 }
+
+/* =========================
+   FOLLOWERS SERVICE
+========================= */
 
 class FollowersServicePage extends StatefulWidget {
   const FollowersServicePage({super.key});
@@ -886,109 +982,212 @@ class _FollowersServicePageState
     return Scaffold(
       appBar: AppBar(
         title: const Text('متابعين ثابتين'),
-        centerTitle: true,
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(20),
-                gradient: const LinearGradient(
-                  colors: [
-                    Color(0xFF6C2BD9),
-                    Color(0xFFB52BD9),
+      body: Directionality(
+        textDirection: TextDirection.rtl,
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(22),
+                  gradient: const LinearGradient(
+                    colors: [
+                      Color(0xFF6C2BD9),
+                      Color(0xFFB52BD9),
+                    ],
+                  ),
+                ),
+                child: const Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Icon(
+                      Icons.people_alt,
+                      size: 45,
+                    ),
+                    SizedBox(height: 12),
+                    Text(
+                      'متابعين ثابتين',
+                      style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    SizedBox(height: 8),
+                    Text(
+                      'أرسل رابط الحساب والكمية المطلوبة.',
+                      style: TextStyle(
+                        color: Colors.white70,
+                      ),
+                    ),
                   ],
                 ),
               ),
-              child: const Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Icon(
-                    Icons.people_alt,
-                    size: 45,
-                  ),
-                  SizedBox(height: 12),
-                  Text(
-                    'متابعين ثابتين',
-                    style: TextStyle(
-                      fontSize: 24,
+              const SizedBox(height: 25),
+              TextField(
+                controller: linkController,
+                keyboardType: TextInputType.url,
+                textDirection: TextDirection.ltr,
+                decoration: const InputDecoration(
+                  labelText: 'الرابط',
+                  hintText: 'https://...',
+                  prefixIcon: Icon(Icons.link),
+                ),
+              ),
+              const SizedBox(height: 15),
+              TextField(
+                controller: quantityController,
+                keyboardType: TextInputType.number,
+                textDirection: TextDirection.ltr,
+                decoration: const InputDecoration(
+                  labelText: 'الكمية',
+                  hintText: 'مثال: 1000',
+                  prefixIcon: Icon(Icons.numbers),
+                ),
+              ),
+              const SizedBox(height: 25),
+              SizedBox(
+                height: 55,
+                child: ElevatedButton.icon(
+                  onPressed:
+                      isLoading ? null : submitRequest,
+                  icon: isLoading
+                      ? const SizedBox(
+                          width: 22,
+                          height: 22,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                          ),
+                        )
+                      : const Icon(Icons.send),
+                  label: Text(
+                    isLoading
+                        ? 'جاري الإرسال...'
+                        : 'إرسال الطلب',
+                    style: const TextStyle(
+                      fontSize: 18,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                  SizedBox(height: 8),
-                  Text(
-                    'أرسل طلب الخدمة وسيتم مراجعته.',
-                    style: TextStyle(
-                      color: Colors.white70,
-                      fontSize: 14,
-                    ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/* =========================
+   ADMIN PAGE
+========================= */
+
+class AdminPage extends StatelessWidget {
+  const AdminPage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final user = FirebaseAuth.instance.currentUser;
+
+    if (user == null) {
+      return const LoginPage();
+    }
+
+    return FutureBuilder<
+        DocumentSnapshot<Map<String, dynamic>>>(
+      future: FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .get(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const SplashPage();
+        }
+
+        final data = snapshot.data?.data() ?? {};
+        final role = data['role'] as String? ?? 'user';
+
+        if (role != 'admin') {
+          return Scaffold(
+            appBar: AppBar(
+              title: const Text('لوحة المطور'),
+            ),
+            body: const Center(
+              child: Text(
+                'ليس لديك صلاحية الدخول 🚫',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          );
+        }
+
+        return const AdminDashboard();
+      },
+    );
+  }
+}
+
+class AdminDashboard extends StatelessWidget {
+  const AdminDashboard({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('لوحة المطور 👑'),
+      ),
+      body: Directionality(
+        textDirection: TextDirection.rtl,
+        child: ListView(
+          padding: const EdgeInsets.all(16),
+          children: [
+            _AdminCard(
+              icon: Icons.payment,
+              title: 'طلبات شراء النقاط',
+              subtitle: 'مراجعة وقبول أو رفض طلبات الدفع',
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) =>
+                        const PurchaseRequestsPage(),
                   ),
-                ],
-              ),
+                );
+              },
             ),
-
-            const SizedBox(height: 25),
-
-            TextField(
-              controller: linkController,
-              keyboardType: TextInputType.url,
-              textDirection: TextDirection.ltr,
-              decoration: InputDecoration(
-                labelText: 'الرابط',
-                hintText: 'https://...',
-                prefixIcon: const Icon(Icons.link),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(14),
-                ),
-              ),
-            ),
-
-            const SizedBox(height: 15),
-
-            TextField(
-              controller: quantityController,
-              keyboardType: TextInputType.number,
-              textDirection: TextDirection.ltr,
-              decoration: InputDecoration(
-                labelText: 'الكمية',
-                hintText: 'مثال: 1000',
-                prefixIcon: const Icon(Icons.numbers),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(14),
-                ),
-              ),
-            ),
-
-            const SizedBox(height: 25),
-
-            SizedBox(
-              height: 55,
-              child: ElevatedButton.icon(
-                onPressed:
-                    isLoading ? null : submitRequest,
-                icon: isLoading
-                    ? const SizedBox(
-                        width: 22,
-                        height: 22,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                        ),
-                      )
-                    : const Icon(Icons.send),
-                label: Text(
-                  isLoading
-                      ? 'جاري الإرسال...'
-                      : 'إرسال الطلب',
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
+            _AdminCard(
+              icon: Icons.miscellaneous_services,
+              title: 'طلبات الخدمات',
+              subtitle: 'مراجعة طلبات الخدمات',
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) =>
+                        const ServiceRequestsPage(),
                   ),
-                ),
-              ),
+                );
+              },
+            ),
+            _AdminCard(
+              icon: Icons.people,
+              title: 'المستخدمون',
+              subtitle: 'عرض المستخدمين والأرصدة',
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const UsersPage(),
+                  ),
+                );
+              },
             ),
           ],
         ),
@@ -997,30 +1196,39 @@ class _FollowersServicePageState
   }
 }
 
-class _ServiceCard extends StatelessWidget {
+class _AdminCard extends StatelessWidget {
   final IconData icon;
   final String title;
+  final String subtitle;
   final VoidCallback onTap;
 
-  const _ServiceCard({
+  const _AdminCard({
     required this.icon,
     required this.title,
+    required this.subtitle,
     required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
     return Card(
-      margin: const EdgeInsets.only(bottom: 10),
+      margin: const EdgeInsets.only(bottom: 12),
       child: ListTile(
+        contentPadding: const EdgeInsets.all(12),
         leading: CircleAvatar(
+          radius: 26,
           child: Icon(icon),
         ),
         title: Text(
           title,
           style: const TextStyle(
             fontWeight: FontWeight.bold,
+            fontSize: 17,
           ),
+        ),
+        subtitle: Padding(
+          padding: const EdgeInsets.only(top: 5),
+          child: Text(subtitle),
         ),
         trailing: const Icon(
           Icons.arrow_forward_ios,
@@ -1031,3 +1239,461 @@ class _ServiceCard extends StatelessWidget {
     );
   }
 }
+
+/* =========================
+   PURCHASE REQUESTS
+========================= */
+
+class PurchaseRequestsPage extends StatelessWidget {
+  const PurchaseRequestsPage({super.key});
+
+  String formatNumber(int number) {
+    return number.toString().replaceAllMapped(
+          RegExp(r'(\d)(?=(\d{3})+(?!\d))'),
+          (match) => '${match[1]},',
+        );
+  }
+
+  Future<void> updatePurchase(
+    BuildContext context,
+    String requestId,
+    Map<String, dynamic> data,
+    String status,
+  ) async {
+    try {
+      if (status == 'approved') {
+        final userId = data['userId'] as String?;
+        final pointsValue = data['points'];
+
+        if (userId == null || pointsValue is! num) {
+          throw Exception('بيانات الطلب غير صحيحة');
+        }
+
+        final points = pointsValue.toInt();
+
+        final firestore = FirebaseFirestore.instance;
+
+        await firestore.runTransaction((transaction) async {
+          final userRef =
+              firestore.collection('users').doc(userId);
+
+          final requestRef = firestore
+              .collection('purchase_requests')
+              .doc(requestId);
+
+          final userSnapshot =
+              await transaction.get(userRef);
+
+          final requestSnapshot =
+              await transaction.get(requestRef);
+
+          final currentRequest =
+              requestSnapshot.data();
+
+          if (currentRequest == null ||
+              currentRequest['status'] != 'pending') {
+            throw Exception(
+              'هذا الطلب تمت معالجته مسبقاً',
+            );
+          }
+
+          final currentPoints =
+              (userSnapshot.data()?['points'] as num?)
+                      ?.toInt() ??
+                  0;
+
+          transaction.update(
+            userRef,
+            {
+              'points': currentPoints + points,
+            },
+          );
+
+          transaction.update(
+            requestRef,
+            {
+              'status': 'approved',
+              'approvedAt':
+                  FieldValue.serverTimestamp(),
+            },
+          );
+        });
+      } else {
+        await FirebaseFirestore.instance
+            .collection('purchase_requests')
+            .doc(requestId)
+            .update({
+          'status': 'rejected',
+          'rejectedAt': FieldValue.serverTimestamp(),
+        });
+      }
+
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              status == 'approved'
+                  ? 'تم قبول الطلب وإضافة النقاط ✅'
+                  : 'تم رفض الطلب ❌',
+            ),
+          ),
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'تعذر تنفيذ العملية: $e',
+            ),
+          ),
+        );
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('طلبات شراء النقاط'),
+      ),
+      body: Directionality(
+        textDirection: TextDirection.rtl,
+        child: StreamBuilder<
+            QuerySnapshot<Map<String, dynamic>>>(
+          stream: FirebaseFirestore.instance
+              .collection('purchase_requests')
+              .orderBy(
+                'createdAt',
+                descending: true,
+              )
+              .snapshots(),
+          builder: (context, snapshot) {
+            if (snapshot.hasError) {
+              return Center(
+                child: Text(
+                  'حدث خطأ: ${snapshot.error}',
+                  textAlign: TextAlign.center,
+                ),
+              );
+            }
+
+            if (!snapshot.hasData) {
+              return const Center(
+                child: CircularProgressIndicator(),
+              );
+            }
+
+            final docs = snapshot.data!.docs;
+
+            if (docs.isEmpty) {
+              return const Center(
+                child: Text(
+                  'لا توجد طلبات حالياً',
+                  style: TextStyle(fontSize: 18),
+                ),
+              );
+            }
+
+            return ListView.builder(
+              padding: const EdgeInsets.all(12),
+              itemCount: docs.length,
+              itemBuilder: (context, index) {
+                final doc = docs[index];
+                final data = doc.data();
+
+                final points =
+                    (data['points'] as num?)?.toInt() ?? 0;
+
+                final price =
+                    (data['price'] as num?)?.toInt() ?? 0;
+
+                final status =
+                    data['status'] as String? ?? 'pending';
+
+                final email =
+                    data['email'] as String? ?? 'بدون بريد';
+
+                return Card(
+                  margin:
+                      const EdgeInsets.only(bottom: 12),
+                  child: Padding(
+                    padding: const EdgeInsets.all(14),
+                    child: Column(
+                      crossAxisAlignment:
+                          CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          '${formatNumber(points)} نقطة',
+                          style: const TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          '${formatNumber(price)} د.ع',
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          email,
+                          textDirection: TextDirection.ltr,
+                        ),
+                        const SizedBox(height: 10),
+                        _StatusChip(status: status),
+                        if (status == 'pending') ...[
+                          const SizedBox(height: 12),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: ElevatedButton.icon(
+                                  onPressed: () {
+                                    updatePurchase(
+                                      context,
+                                      doc.id,
+                                      data,
+                                      'approved',
+                                    );
+                                  },
+                                  icon: const Icon(
+                                    Icons.check,
+                                  ),
+                                  label: const Text('قبول'),
+                                ),
+                              ),
+                              const SizedBox(width: 10),
+                              Expanded(
+                                child: OutlinedButton.icon(
+                                  onPressed: () {
+                                    updatePurchase(
+                                      context,
+                                      doc.id,
+                                      data,
+                                      'rejected',
+                                    );
+                                  },
+                                  icon: const Icon(
+                                    Icons.close,
+                                  ),
+                                  label: const Text('رفض'),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                );
+              },
+            );
+          },
+        ),
+      ),
+    );
+  }
+}
+
+/* =========================
+   SERVICE REQUESTS
+========================= */
+
+class ServiceRequestsPage extends StatelessWidget {
+  const ServiceRequestsPage({super.key});
+
+  Future<void> updateService(
+    BuildContext context,
+    String id,
+    String status,
+  ) async {
+    try {
+      await FirebaseFirestore.instance
+          .collection('service_requests')
+          .doc(id)
+          .update({
+        'status': status,
+        '${status}At': FieldValue.serverTimestamp(),
+      });
+
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              status == 'approved'
+                  ? 'تم قبول طلب الخدمة ✅'
+                  : 'تم رفض طلب الخدمة ❌',
+            ),
+          ),
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('تعذر تنفيذ العملية: $e'),
+          ),
+        );
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('طلبات الخدمات'),
+      ),
+      body: Directionality(
+        textDirection: TextDirection.rtl,
+        child: StreamBuilder<
+            QuerySnapshot<Map<String, dynamic>>>(
+          stream: FirebaseFirestore.instance
+              .collection('service_requests')
+              .orderBy(
+                'createdAt',
+                descending: true,
+              )
+              .snapshots(),
+          builder: (context, snapshot) {
+            if (snapshot.hasError) {
+              return Center(
+                child: Text(
+                  'حدث خطأ: ${snapshot.error}',
+                  textAlign: TextAlign.center,
+                ),
+              );
+            }
+
+            if (!snapshot.hasData) {
+              return const Center(
+                child: CircularProgressIndicator(),
+              );
+            }
+
+            final docs = snapshot.data!.docs;
+
+            if (docs.isEmpty) {
+              return const Center(
+                child: Text('لا توجد طلبات حالياً'),
+              );
+            }
+
+            return ListView.builder(
+              padding: const EdgeInsets.all(12),
+              itemCount: docs.length,
+              itemBuilder: (context, index) {
+                final doc = docs[index];
+                final data = doc.data();
+
+                final serviceName =
+                    data['serviceName'] as String? ??
+                        'خدمة';
+
+                final link =
+                    data['link'] as String? ?? '';
+
+                final quantity =
+                    (data['quantity'] as num?)?.toInt() ?? 0;
+
+                final email =
+                    data['email'] as String? ??
+                        'بدون بريد';
+
+                final status =
+                    data['status'] as String? ??
+                        'pending';
+
+                return Card(
+                  margin:
+                      const EdgeInsets.only(bottom: 12),
+                  child: Padding(
+                    padding: const EdgeInsets.all(14),
+                    child: Column(
+                      crossAxisAlignment:
+                          CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          serviceName,
+                          style: const TextStyle(
+                            fontSize: 19,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text('الكمية: $quantity'),
+                        const SizedBox(height: 5),
+                        Text(
+                          email,
+                          textDirection: TextDirection.ltr,
+                        ),
+                        const SizedBox(height: 8),
+                        SelectableText(
+                          link,
+                          textDirection: TextDirection.ltr,
+                        ),
+                        const SizedBox(height: 10),
+                        _StatusChip(status: status),
+                        if (status == 'pending') ...[
+                          const SizedBox(height: 12),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: ElevatedButton.icon(
+                                  onPressed: () {
+                                    updateService(
+                                      context,
+                                      doc.id,
+                                      'approved',
+                                    );
+                                  },
+                                  icon: const Icon(Icons.check),
+                                  label: const Text('قبول'),
+                                ),
+                              ),
+                              const SizedBox(width: 10),
+                              Expanded(
+                                child: OutlinedButton.icon(
+                                  onPressed: () {
+                                    updateService(
+                                      context,
+                                      doc.id,
+                                      'rejected',
+                                    );
+                                  },
+                                  icon: const Icon(Icons.close),
+                                  label: const Text('رفض'),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                );
+              },
+            );
+          },
+        ),
+      ),
+    );
+  }
+}
+
+/* =========================
+   USERS
+========================= */
+
+class UsersPage extends StatelessWidget {
+  const UsersPage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('المستخدمون'),
+      ),
+      body: Directionality(
+        textDirection: TextDirection.rtl,
+       
