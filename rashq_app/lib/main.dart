@@ -199,23 +199,29 @@ class _LoginPageState extends State<LoginPage> {
         case 'invalid-email':
           message = 'البريد الإلكتروني غير صحيح';
           break;
+
         case 'user-not-found':
         case 'wrong-password':
         case 'invalid-credential':
           message = 'البريد الإلكتروني أو كلمة المرور غير صحيحة';
           break;
+
         case 'email-already-in-use':
           message = 'هذا البريد مستخدم مسبقاً';
           break;
+
         case 'weak-password':
           message = 'كلمة المرور ضعيفة';
           break;
+
         case 'too-many-requests':
           message = 'محاولات كثيرة، حاول لاحقاً';
           break;
+
         case 'network-request-failed':
           message = 'تحقق من اتصال الإنترنت';
           break;
+
         default:
           message = e.message ?? 'حدث خطأ أثناء المصادقة';
       }
@@ -963,8 +969,7 @@ class _FollowersServicePageState
     final user = FirebaseAuth.instance.currentUser;
 
     final link = linkController.text.trim();
-    final quantityText =
-        quantityController.text.trim();
+    final quantityText = quantityController.text.trim();
 
     if (user == null) {
       showMessage('يجب تسجيل الدخول أولاً');
@@ -1754,4 +1759,4 @@ class ServiceRequestsPage
               itemCount: docs.length,
               itemBuilder:
                   (context, index) {
-                final do
+                final doc 
