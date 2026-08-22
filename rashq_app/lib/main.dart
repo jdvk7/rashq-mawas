@@ -38,15 +38,23 @@ class RashqMawasApp extends StatelessWidget {
         inputDecorationTheme: InputDecorationTheme(
           filled: true,
           fillColor: const Color(0xFF17131F),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.all(Radius.circular(14)),
+          border: const OutlineInputBorder(
+            borderRadius: BorderRadius.all(
+              Radius.circular(14),
+            ),
           ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.all(Radius.circular(14)),
-            borderSide: BorderSide(color: Colors.white12),
+          enabledBorder: const OutlineInputBorder(
+            borderRadius: BorderRadius.all(
+              Radius.circular(14),
+            ),
+            borderSide: BorderSide(
+              color: Colors.white12,
+            ),
           ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.all(Radius.circular(14)),
+          focusedBorder: const OutlineInputBorder(
+            borderRadius: BorderRadius.all(
+              Radius.circular(14),
+            ),
             borderSide: BorderSide(
               color: Color(0xFF9C4DFF),
               width: 1.5,
@@ -273,8 +281,8 @@ class _LoginPageState extends State<LoginPage> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Container(
-                  width: 100,
-                  height: 100,
+                  width: 110,
+                  height: 110,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     gradient: const LinearGradient(
@@ -291,10 +299,18 @@ class _LoginPageState extends State<LoginPage> {
                       ),
                     ],
                   ),
-                  child: const Icon(
-                    Icons.flash_on,
-                    size: 55,
-                    color: Colors.white,
+                  child: ClipOval(
+                    child: Image.asset(
+                      'assets/rashq_mawas_icon.png',
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, __, ___) {
+                        return const Icon(
+                          Icons.flash_on,
+                          size: 55,
+                          color: Colors.white,
+                        );
+                      },
+                    ),
                   ),
                 ),
                 const SizedBox(height: 20),
@@ -322,9 +338,9 @@ class _LoginPageState extends State<LoginPage> {
                   controller: emailController,
                   keyboardType: TextInputType.emailAddress,
                   textDirection: TextDirection.ltr,
-                  decoration: InputDecoration(
+                  decoration: const InputDecoration(
                     labelText: 'البريد الإلكتروني',
-                    prefixIcon: const Icon(Icons.email),
+                    prefixIcon: Icon(Icons.email),
                   ),
                 ),
                 const SizedBox(height: 15),
@@ -510,7 +526,9 @@ class HomePage extends StatelessWidget {
               if (isDeveloper)
                 IconButton(
                   tooltip: 'لوحة المطور',
-                  icon: const Icon(Icons.admin_panel_settings),
+                  icon: const Icon(
+                    Icons.admin_panel_settings,
+                  ),
                   onPressed: () {
                     Navigator.push(
                       context,
@@ -546,7 +564,8 @@ class HomePage extends StatelessWidget {
                       ),
                     ),
                     child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                      crossAxisAlignment:
+                          CrossAxisAlignment.start,
                       children: [
                         Text(
                           isDeveloper
@@ -694,6 +713,51 @@ class HomePage extends StatelessWidget {
   }
 }
 
+/* =========================
+   SERVICE CARD
+========================= */
+
+class _ServiceCard extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final VoidCallback onTap;
+
+  const _ServiceCard({
+    required this.icon,
+    required this.title,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 10),
+      child: ListTile(
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 14,
+          vertical: 5,
+        ),
+        leading: CircleAvatar(
+          radius: 25,
+          child: Icon(icon),
+        ),
+        title: Text(
+          title,
+          style: const TextStyle(
+            fontSize: 17,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        trailing: const Icon(
+          Icons.arrow_forward_ios,
+          size: 16,
+        ),
+        onTap: onTap,
+      ),
+    );
+  }
+}
+
 void showComingSoon(BuildContext context) {
   ScaffoldMessenger.of(context).showSnackBar(
     const SnackBar(
@@ -713,17 +777,10 @@ class PackagesPage extends StatelessWidget {
   const PackagesPage({super.key});
 
   String formatNumber(int number) {
-    final text = number.toString();
-    final buffer = StringBuffer();
-
-    for (int i = 0; i < text.length; i++) {
-      if (i > 0 && (text.length - i) % 3 == 0) {
-        buffer.write(',');
-      }
-      buffer.write(text[i]);
-    }
-
-    return buffer.toString();
+    return number.toString().replaceAllMapped(
+          RegExp(r'(\d)(?=(\d{3})+(?!\d))'),
+          (match) => '${match[1]},',
+        );
   }
 
   Future<void> createPurchaseRequest(
@@ -783,7 +840,10 @@ class PackagesPage extends StatelessWidget {
     }
   }
 
-  void showMessage(BuildContext context, String message) {
+  void showMessage(
+    BuildContext context,
+    String message,
+  ) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
@@ -853,7 +913,6 @@ class PackagesPage extends StatelessWidget {
                         ElevatedButton(
                           onPressed: () {
                             Navigator.pop(context);
-
                             createPurchaseRequest(
                               context,
                               package,
@@ -904,7 +963,8 @@ class _FollowersServicePageState
     final user = FirebaseAuth.instance.currentUser;
 
     final link = linkController.text.trim();
-    final quantityText = quantityController.text.trim();
+    final quantityText =
+        quantityController.text.trim();
 
     if (user == null) {
       showMessage('يجب تسجيل الدخول أولاً');
@@ -988,7 +1048,8 @@ class _FollowersServicePageState
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(20),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
+            crossAxisAlignment:
+                CrossAxisAlignment.stretch,
             children: [
               Container(
                 padding: const EdgeInsets.all(20),
@@ -1002,7 +1063,8 @@ class _FollowersServicePageState
                   ),
                 ),
                 child: const Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                  crossAxisAlignment:
+                      CrossAxisAlignment.start,
                   children: [
                     Icon(
                       Icons.people_alt,
@@ -1058,7 +1120,8 @@ class _FollowersServicePageState
                       ? const SizedBox(
                           width: 22,
                           height: 22,
-                          child: CircularProgressIndicator(
+                          child:
+                              CircularProgressIndicator(
                             strokeWidth: 2,
                           ),
                         )
@@ -1104,12 +1167,14 @@ class AdminPage extends StatelessWidget {
           .doc(user.uid)
           .get(),
       builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
+        if (snapshot.connectionState ==
+            ConnectionState.waiting) {
           return const SplashPage();
         }
 
         final data = snapshot.data?.data() ?? {};
-        final role = data['role'] as String? ?? 'user';
+        final role =
+            data['role'] as String? ?? 'user';
 
         if (role != 'admin') {
           return Scaffold(
@@ -1151,7 +1216,8 @@ class AdminDashboard extends StatelessWidget {
             _AdminCard(
               icon: Icons.payment,
               title: 'طلبات شراء النقاط',
-              subtitle: 'مراجعة وقبول أو رفض طلبات الدفع',
+              subtitle:
+                  'مراجعة وقبول أو رفض طلبات الدفع',
               onTap: () {
                 Navigator.push(
                   context,
@@ -1179,12 +1245,14 @@ class AdminDashboard extends StatelessWidget {
             _AdminCard(
               icon: Icons.people,
               title: 'المستخدمون',
-              subtitle: 'عرض المستخدمين والأرصدة',
+              subtitle:
+                  'عرض المستخدمين والأرصدة',
               onTap: () {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (_) => const UsersPage(),
+                    builder: (_) =>
+                        const UsersPage(),
                   ),
                 );
               },
@@ -1212,9 +1280,11 @@ class _AdminCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
-      margin: const EdgeInsets.only(bottom: 12),
+      margin:
+          const EdgeInsets.only(bottom: 12),
       child: ListTile(
-        contentPadding: const EdgeInsets.all(12),
+        contentPadding:
+            const EdgeInsets.all(12),
         leading: CircleAvatar(
           radius: 26,
           child: Icon(icon),
@@ -1227,7 +1297,8 @@ class _AdminCard extends StatelessWidget {
           ),
         ),
         subtitle: Padding(
-          padding: const EdgeInsets.only(top: 5),
+          padding:
+              const EdgeInsets.only(top: 5),
           child: Text(subtitle),
         ),
         trailing: const Icon(
@@ -1244,7 +1315,8 @@ class _AdminCard extends StatelessWidget {
    PURCHASE REQUESTS
 ========================= */
 
-class PurchaseRequestsPage extends StatelessWidget {
+class PurchaseRequestsPage
+    extends StatelessWidget {
   const PurchaseRequestsPage({super.key});
 
   String formatNumber(int number) {
@@ -1262,74 +1334,91 @@ class PurchaseRequestsPage extends StatelessWidget {
   ) async {
     try {
       if (status == 'approved') {
-        final userId = data['userId'] as String?;
+        final userId =
+            data['userId'] as String?;
+
         final pointsValue = data['points'];
 
-        if (userId == null || pointsValue is! num) {
-          throw Exception('بيانات الطلب غير صحيحة');
+        if (userId == null ||
+            pointsValue is! num) {
+          throw Exception(
+            'بيانات الطلب غير صحيحة',
+          );
         }
 
-        final points = pointsValue.toInt();
+        final points =
+            pointsValue.toInt();
 
-        final firestore = FirebaseFirestore.instance;
+        final firestore =
+            FirebaseFirestore.instance;
 
-        await firestore.runTransaction((transaction) async {
-          final userRef =
-              firestore.collection('users').doc(userId);
+        await firestore.runTransaction(
+          (transaction) async {
+            final userRef = firestore
+                .collection('users')
+                .doc(userId);
 
-          final requestRef = firestore
-              .collection('purchase_requests')
-              .doc(requestId);
+            final requestRef = firestore
+                .collection('purchase_requests')
+                .doc(requestId);
 
-          final userSnapshot =
-              await transaction.get(userRef);
+            final userSnapshot =
+                await transaction.get(userRef);
 
-          final requestSnapshot =
-              await transaction.get(requestRef);
-
-          final currentRequest =
-              requestSnapshot.data();
-
-          if (currentRequest == null ||
-              currentRequest['status'] != 'pending') {
-            throw Exception(
-              'هذا الطلب تمت معالجته مسبقاً',
+            final requestSnapshot =
+                await transaction.get(
+              requestRef,
             );
-          }
 
-          final currentPoints =
-              (userSnapshot.data()?['points'] as num?)
-                      ?.toInt() ??
-                  0;
+            final currentRequest =
+                requestSnapshot.data();
 
-          transaction.update(
-            userRef,
-            {
-              'points': currentPoints + points,
-            },
-          );
+            if (currentRequest == null ||
+                currentRequest['status'] !=
+                    'pending') {
+              throw Exception(
+                'هذا الطلب تمت معالجته مسبقاً',
+              );
+            }
 
-          transaction.update(
-            requestRef,
-            {
-              'status': 'approved',
-              'approvedAt':
-                  FieldValue.serverTimestamp(),
-            },
-          );
-        });
+            final currentPoints =
+                (userSnapshot.data()?['points']
+                            as num?)
+                        ?.toInt() ??
+                    0;
+
+            transaction.update(
+              userRef,
+              {
+                'points':
+                    currentPoints + points,
+              },
+            );
+
+            transaction.update(
+              requestRef,
+              {
+                'status': 'approved',
+                'approvedAt':
+                    FieldValue.serverTimestamp(),
+              },
+            );
+          },
+        );
       } else {
         await FirebaseFirestore.instance
             .collection('purchase_requests')
             .doc(requestId)
             .update({
           'status': 'rejected',
-          'rejectedAt': FieldValue.serverTimestamp(),
+          'rejectedAt':
+              FieldValue.serverTimestamp(),
         });
       }
 
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
+        ScaffoldMessenger.of(context)
+            .showSnackBar(
           SnackBar(
             content: Text(
               status == 'approved'
@@ -1341,7 +1430,8 @@ class PurchaseRequestsPage extends StatelessWidget {
       }
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
+        ScaffoldMessenger.of(context)
+            .showSnackBar(
           SnackBar(
             content: Text(
               'تعذر تنفيذ العملية: $e',
@@ -1356,99 +1446,148 @@ class PurchaseRequestsPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('طلبات شراء النقاط'),
+        title:
+            const Text('طلبات شراء النقاط'),
       ),
       body: Directionality(
         textDirection: TextDirection.rtl,
         child: StreamBuilder<
-            QuerySnapshot<Map<String, dynamic>>>(
+            QuerySnapshot<
+                Map<String, dynamic>>>(
           stream: FirebaseFirestore.instance
-              .collection('purchase_requests')
+              .collection(
+                  'purchase_requests')
               .orderBy(
                 'createdAt',
                 descending: true,
               )
               .snapshots(),
-          builder: (context, snapshot) {
+          builder:
+              (context, snapshot) {
             if (snapshot.hasError) {
               return Center(
                 child: Text(
                   'حدث خطأ: ${snapshot.error}',
-                  textAlign: TextAlign.center,
+                  textAlign:
+                      TextAlign.center,
                 ),
               );
             }
 
             if (!snapshot.hasData) {
               return const Center(
-                child: CircularProgressIndicator(),
+                child:
+                    CircularProgressIndicator(),
               );
             }
 
-            final docs = snapshot.data!.docs;
+            final docs =
+                snapshot.data!.docs;
 
             if (docs.isEmpty) {
               return const Center(
                 child: Text(
                   'لا توجد طلبات حالياً',
-                  style: TextStyle(fontSize: 18),
+                  style: TextStyle(
+                    fontSize: 18,
+                  ),
                 ),
               );
             }
 
             return ListView.builder(
-              padding: const EdgeInsets.all(12),
+              padding:
+                  const EdgeInsets.all(12),
               itemCount: docs.length,
-              itemBuilder: (context, index) {
-                final doc = docs[index];
-                final data = doc.data();
+              itemBuilder:
+                  (context, index) {
+                final doc =
+                    docs[index];
+
+                final data =
+                    doc.data();
 
                 final points =
-                    (data['points'] as num?)?.toInt() ?? 0;
+                    (data['points']
+                                as num?)
+                            ?.toInt() ??
+                        0;
 
                 final price =
-                    (data['price'] as num?)?.toInt() ?? 0;
+                    (data['price']
+                                as num?)
+                            ?.toInt() ??
+                        0;
 
                 final status =
-                    data['status'] as String? ?? 'pending';
+                    data['status']
+                            as String? ??
+                        'pending';
 
                 final email =
-                    data['email'] as String? ?? 'بدون بريد';
+                    data['email']
+                            as String? ??
+                        'بدون بريد';
 
                 return Card(
                   margin:
-                      const EdgeInsets.only(bottom: 12),
+                      const EdgeInsets.only(
+                    bottom: 12,
+                  ),
                   child: Padding(
-                    padding: const EdgeInsets.all(14),
+                    padding:
+                        const EdgeInsets.all(
+                      14,
+                    ),
                     child: Column(
                       crossAxisAlignment:
-                          CrossAxisAlignment.start,
+                          CrossAxisAlignment
+                              .start,
                       children: [
                         Text(
                           '${formatNumber(points)} نقطة',
-                          style: const TextStyle(
+                          style:
+                              const TextStyle(
                             fontSize: 20,
-                            fontWeight: FontWeight.bold,
+                            fontWeight:
+                                FontWeight
+                                    .bold,
                           ),
                         ),
-                        const SizedBox(height: 6),
+                        const SizedBox(
+                          height: 6,
+                        ),
                         Text(
                           '${formatNumber(price)} د.ع',
                         ),
-                        const SizedBox(height: 6),
+                        const SizedBox(
+                          height: 6,
+                        ),
                         Text(
                           email,
-                          textDirection: TextDirection.ltr,
+                          textDirection:
+                              TextDirection
+                                  .ltr,
                         ),
-                        const SizedBox(height: 10),
-                        _StatusChip(status: status),
-                        if (status == 'pending') ...[
-                          const SizedBox(height: 12),
+                        const SizedBox(
+                          height: 10,
+                        ),
+                        _StatusChip(
+                          status: status,
+                        ),
+                        if (status ==
+                            'pending') ...[
+                          const SizedBox(
+                            height: 12,
+                          ),
                           Row(
                             children: [
                               Expanded(
-                                child: ElevatedButton.icon(
-                                  onPressed: () {
+                                child:
+                                    ElevatedButton
+                                        .icon(
+                                  onPressed:
+                                      () {
                                     updatePurchase(
                                       context,
                                       doc.id,
@@ -1456,16 +1595,26 @@ class PurchaseRequestsPage extends StatelessWidget {
                                       'approved',
                                     );
                                   },
-                                  icon: const Icon(
-                                    Icons.check,
+                                  icon:
+                                      const Icon(
+                                    Icons
+                                        .check,
                                   ),
-                                  label: const Text('قبول'),
+                                  label:
+                                      const Text(
+                                    'قبول',
+                                  ),
                                 ),
                               ),
-                              const SizedBox(width: 10),
+                              const SizedBox(
+                                width: 10,
+                              ),
                               Expanded(
-                                child: OutlinedButton.icon(
-                                  onPressed: () {
+                                child:
+                                    OutlinedButton
+                                        .icon(
+                                  onPressed:
+                                      () {
                                     updatePurchase(
                                       context,
                                       doc.id,
@@ -1473,10 +1622,15 @@ class PurchaseRequestsPage extends StatelessWidget {
                                       'rejected',
                                     );
                                   },
-                                  icon: const Icon(
-                                    Icons.close,
+                                  icon:
+                                      const Icon(
+                                    Icons
+                                        .close,
                                   ),
-                                  label: const Text('رفض'),
+                                  label:
+                                      const Text(
+                                    'رفض',
+                                  ),
                                 ),
                               ),
                             ],
@@ -1499,7 +1653,8 @@ class PurchaseRequestsPage extends StatelessWidget {
    SERVICE REQUESTS
 ========================= */
 
-class ServiceRequestsPage extends StatelessWidget {
+class ServiceRequestsPage
+    extends StatelessWidget {
   const ServiceRequestsPage({super.key});
 
   Future<void> updateService(
@@ -1513,11 +1668,13 @@ class ServiceRequestsPage extends StatelessWidget {
           .doc(id)
           .update({
         'status': status,
-        '${status}At': FieldValue.serverTimestamp(),
+        '${status}At':
+            FieldValue.serverTimestamp(),
       });
 
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
+        ScaffoldMessenger.of(context)
+            .showSnackBar(
           SnackBar(
             content: Text(
               status == 'approved'
@@ -1529,9 +1686,12 @@ class ServiceRequestsPage extends StatelessWidget {
       }
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
+        ScaffoldMessenger.of(context)
+            .showSnackBar(
           SnackBar(
-            content: Text('تعذر تنفيذ العملية: $e'),
+            content: Text(
+              'تعذر تنفيذ العملية: $e',
+            ),
           ),
         );
       }
@@ -1542,158 +1702,56 @@ class ServiceRequestsPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('طلبات الخدمات'),
+        title:
+            const Text('طلبات الخدمات'),
       ),
       body: Directionality(
         textDirection: TextDirection.rtl,
         child: StreamBuilder<
-            QuerySnapshot<Map<String, dynamic>>>(
+            QuerySnapshot<
+                Map<String, dynamic>>>(
           stream: FirebaseFirestore.instance
-              .collection('service_requests')
+              .collection(
+                  'service_requests')
               .orderBy(
                 'createdAt',
                 descending: true,
               )
               .snapshots(),
-          builder: (context, snapshot) {
+          builder:
+              (context, snapshot) {
             if (snapshot.hasError) {
               return Center(
                 child: Text(
                   'حدث خطأ: ${snapshot.error}',
-                  textAlign: TextAlign.center,
+                  textAlign:
+                      TextAlign.center,
                 ),
               );
             }
 
             if (!snapshot.hasData) {
               return const Center(
-                child: CircularProgressIndicator(),
+                child:
+                    CircularProgressIndicator(),
               );
             }
 
-            final docs = snapshot.data!.docs;
+            final docs =
+                snapshot.data!.docs;
 
             if (docs.isEmpty) {
               return const Center(
-                child: Text('لا توجد طلبات حالياً'),
+                child: Text(
+                  'لا توجد طلبات حالياً',
+                ),
               );
             }
 
             return ListView.builder(
-              padding: const EdgeInsets.all(12),
+              padding:
+                  const EdgeInsets.all(12),
               itemCount: docs.length,
-              itemBuilder: (context, index) {
-                final doc = docs[index];
-                final data = doc.data();
-
-                final serviceName =
-                    data['serviceName'] as String? ??
-                        'خدمة';
-
-                final link =
-                    data['link'] as String? ?? '';
-
-                final quantity =
-                    (data['quantity'] as num?)?.toInt() ?? 0;
-
-                final email =
-                    data['email'] as String? ??
-                        'بدون بريد';
-
-                final status =
-                    data['status'] as String? ??
-                        'pending';
-
-                return Card(
-                  margin:
-                      const EdgeInsets.only(bottom: 12),
-                  child: Padding(
-                    padding: const EdgeInsets.all(14),
-                    child: Column(
-                      crossAxisAlignment:
-                          CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          serviceName,
-                          style: const TextStyle(
-                            fontSize: 19,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        Text('الكمية: $quantity'),
-                        const SizedBox(height: 5),
-                        Text(
-                          email,
-                          textDirection: TextDirection.ltr,
-                        ),
-                        const SizedBox(height: 8),
-                        SelectableText(
-                          link,
-                          textDirection: TextDirection.ltr,
-                        ),
-                        const SizedBox(height: 10),
-                        _StatusChip(status: status),
-                        if (status == 'pending') ...[
-                          const SizedBox(height: 12),
-                          Row(
-                            children: [
-                              Expanded(
-                                child: ElevatedButton.icon(
-                                  onPressed: () {
-                                    updateService(
-                                      context,
-                                      doc.id,
-                                      'approved',
-                                    );
-                                  },
-                                  icon: const Icon(Icons.check),
-                                  label: const Text('قبول'),
-                                ),
-                              ),
-                              const SizedBox(width: 10),
-                              Expanded(
-                                child: OutlinedButton.icon(
-                                  onPressed: () {
-                                    updateService(
-                                      context,
-                                      doc.id,
-                                      'rejected',
-                                    );
-                                  },
-                                  icon: const Icon(Icons.close),
-                                  label: const Text('رفض'),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ],
-                    ),
-                  ),
-                );
-              },
-            );
-          },
-        ),
-      ),
-    );
-  }
-}
-
-/* =========================
-   USERS
-========================= */
-
-class UsersPage extends StatelessWidget {
-  const UsersPage({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('المستخدمون'),
-      ),
-      body: Directionality(
-        textDirection: TextDirection.rtl,
-       
+              itemBuilder:
+                  (context, index) {
+                final do
