@@ -1,5 +1,5 @@
 name: rashq_app
-description: تطبيق رشق مواس
+description: TikTwo - تطبيق فيديوهات قصيرة
 publish_to: 'none'
 
 version: 1.0.0+1
@@ -12,9 +12,13 @@ dependencies:
     sdk: flutter
 
   cupertino_icons: ^1.0.8
+
   firebase_core: ^4.13.0
   firebase_auth: ^6.5.7
   cloud_firestore: ^6.8.0
+
+  video_player: ^2.10.0
+  image_picker: ^1.1.2
 
 dev_dependencies:
   flutter_test:
